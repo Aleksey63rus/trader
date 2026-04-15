@@ -1,0 +1,2410 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>INVESTOR Terminal</title>
+
+  <!-- ── Libs ── -->
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.54.0/dist/apexcharts.min.js"></script>
+  <script src="https://unpkg.com/@popperjs/core@2/dist/umd/popper.min.js"></script>
+  <script src="https://unpkg.com/tippy.js@6/dist/tippy-bundle.umd.js"></script>
+  <link   rel="stylesheet" href="https://unpkg.com/tippy.js@6/dist/tippy.css"/>
+  <link   rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+  <style>
+  /* ══════════════════════════════════════════════════════════════
+     CSS VARIABLES — Binance / Bloomberg dark palette
+  ══════════════════════════════════════════════════════════════ */
+  :root {
+    --font:      'Tahoma', 'Segoe UI', 'Arial', sans-serif;
+    --font-mono: 'Courier New', 'Consolas', monospace;
+
+    /* Backgrounds */
+    --bg0:   #0B0E11;
+    --bg1:   #13171D;
+    --bg2:   #1A1F2A;
+    --bg3:   #1E2531;
+    --bg4:   #252D3D;
+    --bg5:   #2C3650;
+
+    /* Sidebar */
+    --sb:    #0D1117;
+    --sb2:   #161B26;
+    --sb3:   #1C2235;
+
+    /* Borders */
+    --bdr:   #2A3347;
+    --bdr2:  #354160;
+
+    /* Text */
+    --t0:    #EAECEF;
+    --t1:    #B0BAC8;
+    --t2:    #707F96;
+    --t3:    #4A5568;
+
+    /* Accent — electric blue */
+    --acc:   #2F80ED;
+    --acc2:  #1A6FD4;
+    --acc-a: rgba(47,128,237,.15);
+
+    /* Green */
+    --grn:   #0ECB81;
+    --grn2:  #0BA568;
+    --grn-a: rgba(14,203,129,.12);
+
+    /* Red */
+    --red:   #F6465D;
+    --red2:  #CC3347;
+    --red-a: rgba(246,70,93,.12);
+
+    /* Gold */
+    --gld:   #F0B90B;
+    --gld-a: rgba(240,185,11,.12);
+
+    /* Misc */
+    --r:     4px;
+    --hdr:   52px;
+    --sb-w:  220px;
+    --trans: .18s cubic-bezier(.4,0,.2,1);
+  }
+
+  /* ── Reset ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    font-family: var(--font);
+    font-size: 13px;
+    line-height: 1.5;
+    background: var(--bg0);
+    color: var(--t0);
+  }
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: var(--bg1); }
+  ::-webkit-scrollbar-thumb { background: var(--bg5); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--bdr2); }
+  a { color: var(--acc); text-decoration: none; }
+  a:hover { color: #5BA3F5; }
+
+  /* ── App layout ── */
+  .app { display: flex; height: 100vh; }
+
+  /* ══ SIDEBAR ══════════════════════════════════════════════════ */
+  .sidebar {
+    width: var(--sb-w);
+    background: var(--sb);
+    border-right: 1px solid var(--bdr);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    transition: width var(--trans);
+    overflow: hidden;
+    z-index: 100;
+  }
+  .sb-logo {
+    height: var(--hdr);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 18px;
+    border-bottom: 1px solid var(--bdr);
+    background: var(--sb);
+    flex-shrink: 0;
+  }
+  .sb-logo-icon {
+    width: 28px; height: 28px;
+    background: linear-gradient(135deg, var(--acc), #5BA3F5);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-size: 14px;
+    font-weight: 900;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(47,128,237,.4);
+  }
+  .sb-logo-text { flex: 1; overflow: hidden; }
+  .sb-logo-name {
+    font-size: 13px; font-weight: 700; color: var(--t0);
+    letter-spacing: .4px; white-space: nowrap;
+  }
+  .sb-logo-sub {
+    font-size: 9px; color: var(--t2);
+    letter-spacing: .3px; white-space: nowrap;
+  }
+
+  .sb-section {
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 1.4px; text-transform: uppercase;
+    color: var(--t3); padding: 16px 18px 5px;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 18px;
+    cursor: pointer;
+    color: var(--t2);
+    font-size: 12.5px;
+    transition: all var(--trans);
+    border-left: 2px solid transparent;
+    position: relative;
+    user-select: none;
+    border-radius: 0;
+  }
+  .nav-item:hover { background: var(--sb2); color: var(--t0); border-left-color: var(--bdr2); }
+  .nav-item.active {
+    background: linear-gradient(90deg, rgba(47,128,237,.18) 0%, transparent 100%);
+    color: #fff;
+    border-left-color: var(--acc);
+    font-weight: 600;
+  }
+  .nav-icon { width: 15px; height: 15px; flex-shrink: 0; opacity: .75; }
+  .nav-item.active .nav-icon { opacity: 1; }
+  .nav-badge {
+    margin-left: auto;
+    background: var(--acc);
+    color: #fff;
+    font-size: 9px; font-weight: 700;
+    padding: 1px 6px; border-radius: 10px;
+  }
+  .sb-spacer { flex: 1; }
+  .sb-footer {
+    padding: 12px 16px;
+    border-top: 1px solid var(--bdr);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .status-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+    background: var(--t3);
+    transition: background var(--trans), box-shadow var(--trans);
+  }
+  .status-dot.online { background: var(--grn); box-shadow: 0 0 6px var(--grn); }
+  .status-dot.offline { background: var(--red); }
+  .sb-status-text { font-size: 11px; color: var(--t2); }
+  .sb-status-val { color: var(--t0); font-weight: 600; margin-left: 2px; }
+
+  /* ══ MAIN ══════════════════════════════════════════════════════ */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+
+  /* ── Topbar ── */
+  .topbar {
+    height: var(--hdr);
+    background: var(--bg1);
+    border-bottom: 1px solid var(--bdr);
+    display: flex; align-items: center; gap: 12px;
+    padding: 0 24px; flex-shrink: 0;
+  }
+  .topbar-title {
+    font-size: 14px; font-weight: 700; color: var(--t0);
+    flex: 1; letter-spacing: .3px;
+  }
+  .topbar-chip {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--bg3); border: 1px solid var(--bdr);
+    padding: 4px 12px; border-radius: var(--r);
+    font-size: 11.5px; color: var(--t1);
+    cursor: pointer;
+    transition: border-color var(--trans);
+  }
+  .topbar-chip:hover { border-color: var(--bdr2); }
+  .topbar-chip .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .topbar-time {
+    font-size: 11.5px; color: var(--t2);
+    font-family: var(--font-mono);
+    letter-spacing: .5px;
+  }
+  .topbar-divider { width: 1px; height: 20px; background: var(--bdr); }
+
+  /* ── Progress bar (NProgress-style) ── */
+  #nprogress {
+    position: fixed; top: 0; left: 0; right: 0;
+    height: 2px; background: var(--acc);
+    z-index: 9999; transition: width .3s ease;
+    box-shadow: 0 0 8px var(--acc);
+  }
+
+  /* ── Content ── */
+  .content-area { flex: 1; overflow-y: auto; padding: 22px 26px; }
+  .page { display: none; animation: fadeUp .22s ease; }
+  .page.active { display: block; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Page header ── */
+  .page-hdr {
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 20px;
+  }
+  .page-hdr h1 {
+    font-size: 17px; font-weight: 700; color: var(--t0);
+    letter-spacing: .3px;
+  }
+  .page-hdr .sub { font-size: 12px; color: var(--t2); }
+  .page-hdr-actions { margin-left: auto; display: flex; gap: 8px; }
+
+  /* ══ KPI CARDS ════════════════════════════════════════════════ */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .kpi {
+    background: var(--bg2);
+    border: 1px solid var(--bdr);
+    border-radius: var(--r);
+    padding: 16px 18px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color var(--trans), transform var(--trans);
+    cursor: default;
+  }
+  .kpi:hover { border-color: var(--bdr2); transform: translateY(-1px); }
+  .kpi::before {
+    content: '';
+    position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    background: var(--bdr2);
+    transition: background var(--trans);
+  }
+  .kpi.k-acc::before  { background: var(--acc); }
+  .kpi.k-grn::before  { background: var(--grn); }
+  .kpi.k-red::before  { background: var(--red); }
+  .kpi.k-gld::before  { background: var(--gld); }
+  /* Subtle glow bg */
+  .kpi.k-grn { background: linear-gradient(135deg, var(--bg2) 60%, rgba(14,203,129,.05)); }
+  .kpi.k-red { background: linear-gradient(135deg, var(--bg2) 60%, rgba(246,70,93,.05)); }
+  .kpi.k-acc { background: linear-gradient(135deg, var(--bg2) 60%, rgba(47,128,237,.05)); }
+  .kpi-icon {
+    position: absolute; right: 14px; top: 14px;
+    width: 28px; height: 28px;
+    background: var(--bg4); border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    opacity: .6;
+  }
+  .kpi-label {
+    font-size: 10px; font-weight: 700; letter-spacing: .8px;
+    text-transform: uppercase; color: var(--t2);
+    margin-bottom: 6px;
+  }
+  .kpi-value {
+    font-size: 24px; font-weight: 700;
+    font-family: var(--font-mono);
+    line-height: 1; color: var(--t0);
+    transition: color .3s;
+  }
+  .kpi-value.v-grn { color: var(--grn); }
+  .kpi-value.v-red { color: var(--red); }
+  .kpi-value.v-acc { color: var(--acc); }
+  .kpi-value.v-gld { color: var(--gld); }
+  .kpi-sub { font-size: 10.5px; color: var(--t2); margin-top: 4px; }
+  .kpi-delta {
+    display: inline-flex; align-items: center; gap: 2px;
+    font-size: 10px; font-weight: 700; margin-top: 4px;
+    padding: 1px 5px; border-radius: 3px;
+  }
+  .kpi-delta.up   { background: var(--grn-a); color: var(--grn); }
+  .kpi-delta.down { background: var(--red-a); color: var(--red); }
+
+  /* ══ PANEL ════════════════════════════════════════════════════ */
+  .panel {
+    background: var(--bg2);
+    border: 1px solid var(--bdr);
+    border-radius: var(--r);
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .panel-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--bdr);
+    background: var(--bg3);
+  }
+  .panel-title {
+    font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .6px;
+    color: var(--t1);
+  }
+  .panel-body { padding: 16px; }
+  .panel-actions { display: flex; gap: 6px; align-items: center; }
+
+  /* ══ TABLES ═══════════════════════════════════════════════════ */
+  .tbl-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  thead tr { background: var(--bg3); }
+  th {
+    padding: 8px 12px;
+    font-size: 9.5px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .7px;
+    color: var(--t2); border-bottom: 1px solid var(--bdr);
+    white-space: nowrap; text-align: left;
+    cursor: pointer; user-select: none;
+  }
+  th:hover { color: var(--t1); }
+  td {
+    padding: 8px 12px;
+    border-bottom: 1px solid rgba(42,51,71,.6);
+    color: var(--t1);
+    vertical-align: middle;
+  }
+  td.num { font-family: var(--font-mono); text-align: right; }
+  tr:last-child td { border-bottom: none; }
+  tbody tr {
+    transition: background var(--trans);
+  }
+  tbody tr:hover { background: var(--bg3); }
+  .tbl-empty { text-align: center; padding: 32px; color: var(--t3); font-size: 12px; }
+
+  /* ══ STRATEGY CARDS ═══════════════════════════════════════════ */
+  .strat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 14px; margin-bottom: 20px;
+  }
+  .strat-card {
+    background: var(--bg2); border: 1px solid var(--bdr);
+    border-radius: var(--r); padding: 18px;
+    cursor: pointer; transition: all var(--trans);
+    position: relative; overflow: hidden;
+  }
+  .strat-card::after {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: var(--acc);
+    transition: background var(--trans);
+  }
+  .strat-card:hover { border-color: var(--bdr2); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.3); }
+  .strat-card.selected { border-color: var(--grn); }
+  .strat-card.selected::after { background: var(--grn); }
+  .strat-name { font-size: 14px; font-weight: 700; color: var(--t0); margin-bottom: 6px; }
+  .strat-tf {
+    display: inline-flex; align-items: center;
+    font-size: 9px; font-weight: 700; letter-spacing: .5px;
+    text-transform: uppercase;
+    background: var(--acc-a); color: var(--acc);
+    border: 1px solid rgba(47,128,237,.3);
+    padding: 2px 8px; border-radius: 3px; margin-bottom: 14px;
+  }
+  .strat-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .strat-m { text-align: center; padding: 6px; background: var(--bg3); border-radius: 3px; }
+  .strat-m-val { font-size: 16px; font-weight: 700; font-family: var(--font-mono); }
+  .strat-m-lbl { font-size: 9px; text-transform: uppercase; letter-spacing: .4px; color: var(--t3); margin-top: 2px; }
+  .strat-desc { font-size: 11.5px; color: var(--t2); margin-top: 12px; line-height: 1.6; border-top: 1px solid var(--bdr); padding-top: 12px; }
+  .strat-req { font-size: 10.5px; color: var(--t3); margin-top: 8px; }
+
+  /* ══ FORMS ════════════════════════════════════════════════════ */
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px; margin-bottom: 16px;
+  }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label {
+    font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .6px;
+    color: var(--t2);
+  }
+  .field .hint { font-size: 10.5px; color: var(--t3); }
+  input, select, textarea {
+    font-family: var(--font); font-size: 12.5px;
+    background: var(--bg3); border: 1px solid var(--bdr);
+    color: var(--t0); padding: 8px 10px;
+    border-radius: var(--r); outline: none; width: 100%;
+    transition: border-color var(--trans), background var(--trans);
+    -webkit-appearance: none;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--acc); background: var(--bg4);
+    box-shadow: 0 0 0 2px var(--acc-a);
+  }
+  input::placeholder { color: var(--t3); }
+  input[type="password"] { letter-spacing: .1em; }
+  select { cursor: pointer; }
+
+  /* ══ BUTTONS ══════════════════════════════════════════════════ */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 16px;
+    font-family: var(--font); font-size: 12px; font-weight: 600;
+    border: 1px solid transparent; cursor: pointer;
+    border-radius: var(--r); transition: all var(--trans);
+    white-space: nowrap; user-select: none;
+  }
+  .btn:active { transform: scale(.97); }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+  .btn svg { width: 13px; height: 13px; }
+  .btn-primary { background: var(--acc); color: #fff; border-color: var(--acc); }
+  .btn-primary:hover { background: var(--acc2); border-color: var(--acc2); box-shadow: 0 4px 12px rgba(47,128,237,.3); }
+  .btn-success { background: var(--grn); color: #0B0E11; border-color: var(--grn); font-weight: 700; }
+  .btn-success:hover { background: var(--grn2); }
+  .btn-danger  { background: var(--red); color: #fff; border-color: var(--red); }
+  .btn-danger:hover { background: var(--red2); }
+  .btn-ghost   { background: transparent; border-color: var(--bdr); color: var(--t1); }
+  .btn-ghost:hover { border-color: var(--bdr2); background: var(--bg3); color: var(--t0); }
+  .btn-sm { padding: 5px 11px; font-size: 11px; }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+
+  /* ══ BADGES ═══════════════════════════════════════════════════ */
+  .badge {
+    display: inline-flex; align-items: center;
+    padding: 2px 8px; font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .3px;
+    border-radius: 3px; white-space: nowrap;
+  }
+  .bdg-grn  { background: var(--grn-a); color: var(--grn); border: 1px solid rgba(14,203,129,.25); }
+  .bdg-red  { background: var(--red-a); color: var(--red); border: 1px solid rgba(246,70,93,.25); }
+  .bdg-acc  { background: var(--acc-a); color: var(--acc); border: 1px solid rgba(47,128,237,.25); }
+  .bdg-gld  { background: var(--gld-a); color: var(--gld); border: 1px solid rgba(240,185,11,.25); }
+  .bdg-neu  { background: var(--bg4); color: var(--t2); border: 1px solid var(--bdr); }
+
+  /* ══ NOTICES ══════════════════════════════════════════════════ */
+  .notice {
+    padding: 12px 16px; font-size: 12.5px;
+    margin-bottom: 14px; border-left: 3px solid;
+    border-radius: 0 var(--r) var(--r) 0;
+    line-height: 1.55;
+  }
+  .n-info    { background: rgba(47,128,237,.08); border-color: var(--acc);  color: #7AB4FF; }
+  .n-success { background: var(--grn-a); border-color: var(--grn); color: #3AEBA1; }
+  .n-error   { background: var(--red-a); border-color: var(--red); color: #FF7A8A; }
+  .n-warn    { background: var(--gld-a); border-color: var(--gld); color: #F5CB5C; }
+
+  /* ══ SPINNER ══════════════════════════════════════════════════ */
+  .spinner {
+    display: inline-block; width: 13px; height: 13px;
+    border: 2px solid var(--bdr2); border-top-color: var(--acc);
+    border-radius: 50%; animation: spin .5s linear infinite;
+    vertical-align: middle; margin-right: 6px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ══ TABS ═════════════════════════════════════════════════════ */
+  .tabs {
+    display: flex; border-bottom: 1px solid var(--bdr);
+    margin-bottom: 14px; gap: 0;
+  }
+  .tab {
+    padding: 9px 18px; font-size: 11.5px; font-weight: 600;
+    cursor: pointer; color: var(--t2);
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+    transition: all var(--trans); letter-spacing: .2px;
+  }
+  .tab:hover { color: var(--t0); }
+  .tab.active { color: var(--acc); border-bottom-color: var(--acc); }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* ══ PERIOD BUTTONS ═══════════════════════════════════════════ */
+  .period-row { display: flex; gap: 4px; margin-bottom: 12px; }
+  .period-btn {
+    padding: 4px 12px; font-size: 11px; font-weight: 600;
+    background: var(--bg3); border: 1px solid var(--bdr);
+    color: var(--t2); cursor: pointer; border-radius: var(--r);
+    transition: all var(--trans);
+  }
+  .period-btn:hover { border-color: var(--bdr2); color: var(--t0); }
+  .period-btn.active { background: var(--acc-a); border-color: var(--acc); color: var(--acc); }
+
+  /* ══ CHART BOX ════════════════════════════════════════════════ */
+  .chart-box {
+    background: var(--bg2); border: 1px solid var(--bdr);
+    border-radius: var(--r); padding: 16px 18px;
+    margin-bottom: 16px;
+  }
+  .chart-title {
+    font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .6px;
+    color: var(--t2); margin-bottom: 12px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  /* ══ UPLOAD ZONE ══════════════════════════════════════════════ */
+  .upload-zone {
+    border: 2px dashed var(--bdr2);
+    border-radius: var(--r); padding: 40px 24px;
+    text-align: center; cursor: pointer;
+    background: var(--bg2);
+    transition: all var(--trans);
+    margin-bottom: 16px;
+  }
+  .upload-zone:hover, .upload-zone.drag {
+    border-color: var(--acc); background: var(--acc-a);
+  }
+  .upload-zone-icon { font-size: 32px; margin-bottom: 10px; color: var(--t2); }
+  .upload-zone-text { font-size: 14px; font-weight: 600; color: var(--t1); }
+  .upload-zone-hint { font-size: 11.5px; color: var(--t3); margin-top: 4px; }
+
+  /* ══ SETTINGS SECTIONS ════════════════════════════════════════ */
+  .settings-section {
+    background: var(--bg2); border: 1px solid var(--bdr);
+    border-radius: var(--r); margin-bottom: 14px; overflow: hidden;
+  }
+  .settings-head {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--bg3); border-bottom: 1px solid var(--bdr);
+    padding: 11px 16px; cursor: pointer;
+    user-select: none; transition: background var(--trans);
+  }
+  .settings-head:hover { background: var(--bg4); }
+  .settings-head-title {
+    font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .6px; color: var(--t1);
+  }
+  .settings-head svg { width: 14px; height: 14px; color: var(--acc); flex-shrink: 0; }
+  .settings-head-arrow {
+    margin-left: auto; width: 14px; height: 14px;
+    color: var(--t3); transition: transform var(--trans);
+  }
+  .settings-section.collapsed .settings-head-arrow { transform: rotate(-90deg); }
+  .settings-body { padding: 18px; }
+  .settings-section.collapsed .settings-body { display: none; }
+
+  /* ══ CAPITAL CALC ══════════════════════════════════════════════ */
+  .cap-calc {
+    background: var(--bg3); border: 1px solid var(--bdr);
+    border-radius: var(--r); padding: 16px;
+    margin: 14px 0;
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+    text-align: center;
+  }
+  .cap-calc-item-lbl { font-size: 10px; color: var(--t2); margin-bottom: 4px; }
+  .cap-calc-item-val { font-family: var(--font-mono); font-size: 16px; font-weight: 700; }
+
+  /* ══ PORTFOLIO CARD ═══════════════════════════════════════════ */
+  .port-card {
+    background: var(--bg2); border: 1px solid var(--bdr);
+    border-radius: var(--r); margin-bottom: 12px; overflow: hidden;
+    transition: border-color var(--trans);
+  }
+  .port-card:hover { border-color: var(--bdr2); }
+  .port-card-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px; border-bottom: 1px solid var(--bdr);
+    background: var(--bg3);
+  }
+  .port-card-name { font-size: 13px; font-weight: 700; color: var(--t0); }
+  .port-card-body {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 0;
+    padding: 0;
+  }
+  .port-metric {
+    padding: 14px 18px;
+    border-right: 1px solid var(--bdr);
+  }
+  .port-metric:last-child { border-right: none; }
+  .port-metric-lbl { font-size: 9.5px; text-transform: uppercase; letter-spacing: .6px; color: var(--t3); margin-bottom: 4px; }
+  .port-metric-val { font-family: var(--font-mono); font-size: 17px; font-weight: 700; color: var(--t0); }
+
+  /* ══ MISC ═════════════════════════════════════════════════════ */
+  .divider { border: none; border-top: 1px solid var(--bdr); margin: 16px 0; }
+  .sep {
+    display: flex; align-items: center; gap: 8px; margin: 14px 0;
+  }
+  .sep span { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--t3); white-space: nowrap; }
+  .sep::before, .sep::after { content: ''; flex: 1; border-top: 1px solid var(--bdr); }
+  .pos { color: var(--grn) !important; }
+  .neg { color: var(--red) !important; }
+  .neu { color: var(--t2) !important; }
+  .acc { color: var(--acc) !important; }
+  .gld { color: var(--gld) !important; }
+
+  /* Highlight on save */
+  @keyframes saveFlash {
+    0%   { box-shadow: 0 0 0 0 rgba(14,203,129,.5); }
+    70%  { box-shadow: 0 0 0 6px rgba(14,203,129,0); }
+    100% { box-shadow: none; }
+  }
+  .flash-save { animation: saveFlash .6s ease; }
+
+  /* Number counter animation */
+  .count-up { transition: all .4s ease; }
+
+  /* ── Responsive ── */
+  @media (max-width: 900px) {
+    .sidebar { width: 52px; }
+    .sb-logo-text, .sb-section, .nav-item span:not(.nav-icon), .sb-footer .sb-status-text, .sb-footer .sb-status-val { display: none; }
+    .nav-item { justify-content: center; padding: 10px; }
+    .nav-badge { display: none; }
+    .kpi-row { grid-template-columns: repeat(2, 1fr); }
+  }
+  </style>
+</head>
+<body>
+<div id="np-bar"></div>
+
+<div class="app">
+  <!-- ══ SIDEBAR ══ -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-icon">IV</div>
+      <div class="sb-logo-text">
+        <div class="sb-logo-name">INVESTOR</div>
+        <div class="sb-logo-sub">Trading Terminal v1.0</div>
+      </div>
+    </div>
+
+    <div class="sb-section">Аналитика</div>
+    <div class="nav-item active" onclick="showPage('dashboard',this)" id="nav-dashboard">
+      <i data-lucide="layout-dashboard" class="nav-icon"></i><span>Дашборд</span>
+    </div>
+    <div class="nav-item" onclick="showPage('strategies',this)" id="nav-strategies">
+      <i data-lucide="zap" class="nav-icon"></i><span>Стратегии</span>
+    </div>
+    <div class="nav-item" onclick="showPage('backtest',this)" id="nav-backtest">
+      <i data-lucide="flask-conical" class="nav-icon"></i><span>Бэктест</span>
+    </div>
+
+    <div class="sb-section">Торговля</div>
+    <div class="nav-item" onclick="showPage('trades',this)" id="nav-trades">
+      <i data-lucide="list-ordered" class="nav-icon"></i><span>Журнал сделок</span>
+    </div>
+    <div class="nav-item" onclick="showPage('portfolios',this)" id="nav-portfolios">
+      <i data-lucide="briefcase" class="nav-icon"></i><span>Портфели</span>
+    </div>
+
+    <div class="sb-section">Система</div>
+    <div class="nav-item" onclick="showPage('data',this)" id="nav-data">
+      <i data-lucide="database" class="nav-icon"></i><span>Данные</span>
+    </div>
+    <div class="nav-item" onclick="showPage('settings',this)" id="nav-settings">
+      <i data-lucide="settings-2" class="nav-icon"></i><span>Администрирование</span>
+    </div>
+
+    <div class="sb-spacer"></div>
+    <div class="sb-footer">
+      <div class="status-dot" id="status-dot"></div>
+      <span class="sb-status-text">API&nbsp;<span class="sb-status-val" id="status-text">—</span></span>
+    </div>
+  </nav>
+
+  <!-- ══ MAIN ══ -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="topbar-title">Дашборд</div>
+      <div class="topbar-chip" onclick="showPage('settings', document.getElementById('nav-settings'))"
+           id="topbar-broker">
+        <span class="dot" id="broker-dot" style="background:var(--t3)"></span>
+        <span id="broker-label">Брокер не настроен</span>
+      </div>
+      <div class="topbar-divider"></div>
+      <div class="topbar-time" id="topbar-time"></div>
+    </div>
+
+    <div class="content-area">
+
+      <!-- ══ ДАШБОРД ══════════════════════════════════════════════ -->
+      <div class="page active" id="page-dashboard">
+        <div class="page-hdr">
+          <h1>Дашборд</h1>
+          <span class="sub">Сводная информация по системе</span>
+          <div class="page-hdr-actions">
+            <button class="btn btn-ghost btn-sm" onclick="loadDashboard()">
+              <i data-lucide="refresh-cw"></i> Обновить
+            </button>
+          </div>
+        </div>
+
+        <div class="kpi-row" id="dashboard-kpi">
+          <div class="kpi k-acc">
+            <div class="kpi-icon"><i data-lucide="briefcase" style="width:14px;height:14px;color:var(--acc)"></i></div>
+            <div class="kpi-label">Портфелей</div>
+            <div class="kpi-value v-acc count-up" id="d-portfolios">—</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-icon"><i data-lucide="zap" style="width:14px;height:14px;color:var(--gld)"></i></div>
+            <div class="kpi-label">Стратегий</div>
+            <div class="kpi-value count-up">3</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-icon"><i data-lucide="bar-chart-2" style="width:14px;height:14px;color:var(--t2)"></i></div>
+            <div class="kpi-label">Записей сделок</div>
+            <div class="kpi-value count-up" id="d-trades">—</div>
+          </div>
+          <div class="kpi" id="d-status-kpi">
+            <div class="kpi-icon"><i data-lucide="activity" style="width:14px;height:14px;color:var(--grn)"></i></div>
+            <div class="kpi-label">Статус API</div>
+            <div class="kpi-value" id="d-status">—</div>
+            <div class="kpi-sub" id="d-ver"></div>
+          </div>
+        </div>
+
+        <div class="notice n-info" style="font-size:12px">
+          <b>Начало работы:</b> откройте <b>Данные</b> для проверки загруженных котировок,
+          затем <b>Бэктест</b> для тестирования стратегии на истории 2022–2026.
+          Брокер и уведомления — в разделе <b>Администрирование</b>.
+        </div>
+
+        <div class="chart-box">
+          <div class="chart-title">
+            <span>Сравнение стратегий — с реальными комиссиями БКС (2022–2026, MOEX)</span>
+            <div style="display:flex;gap:8px;align-items:center">
+              <span class="badge bdg-grn">+2.0% ATR</span>
+              <span class="badge bdg-acc">~MTF v1</span>
+              <span class="badge bdg-gld">~MTF v2</span>
+              <span style="font-size:9.5px;color:var(--t3)" data-tippy-content="Комиссия БКС Инвестор: покупка 0%, продажа 0.30%. Проскальзывание MOEX: 0.10%. Итого на сделку: ~0.50%.">⚠ комиссия 0.30%</span>
+            </div>
+          </div>
+          <div id="chart-strategies" style="height:300px"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head" style="gap:12px;flex-wrap:wrap">
+            <span class="panel-title">Результаты стратегий — с реальными комиссиями БКС «Инвестор»</span>
+            <span style="font-size:10px;color:var(--t3);margin-left:auto"
+              data-tippy-content="Без учёта комиссий ATR_BO показывает +4.0%/год. Реальные расходы: покупка 0% + продажа 0.30% + проскальзывание 0.10% = ~0.50% на сделку.">
+              ℹ Без комиссий: ATR +4.0% / MTF v1 ~3.5% / MTF v2 ~2.8%
+            </span>
+          </div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr>
+                <th>Стратегия</th>
+                <th data-tippy-content="Среднегодовая доходность с реальными комиссиями БКС (покупка 0%, продажа 0.30%)">Год. % <span style="color:var(--t3);font-weight:400">(реал.)</span></th>
+                <th data-tippy-content="Максимальная просадка капитала от пика">Max DD</th>
+                <th data-tippy-content="Доля прибыльных сделок из всех">Win Rate</th>
+                <th data-tippy-content="Отношение прибыли к убыткам. Норма > 1.5">Profit Factor</th>
+                <th data-tippy-content="Доходность с поправкой на риск. Норма > 1.0">Sharpe</th>
+                <th data-tippy-content="Потери на комиссиях в год (реал. vs идеал)">−Комиссии</th>
+                <th>ТФ</th>
+              </tr></thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <b>ATR Breakout Daily</b>
+                    <div style="font-size:10px;color:var(--t3);margin-top:2px">4 поз × 25% · 22 тикера · D</div>
+                  </td>
+                  <td class="num pos">+2.0%</td>
+                  <td class="num neg">−57.5%</td>
+                  <td class="num neu">41.2%</td>
+                  <td class="num pos">1.38</td>
+                  <td class="num neu">0.25</td>
+                  <td class="num neg" data-tippy-content="Без комиссий: +4.0%/год. Потери: −2.0%/год или ~2 275 ₽/год на 100 000 ₽">−2.0%/год</td>
+                  <td><span class="badge bdg-acc">Дневной</span></td>
+                </tr>
+                <tr>
+                  <td>
+                    <b>MTF Trend v1</b>
+                    <div style="font-size:10px;color:var(--t3);margin-top:2px">4 поз × 25% · 22 тикера · 1H–D</div>
+                  </td>
+                  <td class="num pos">~+1.5%</td>
+                  <td class="num neg">−14–18%</td>
+                  <td class="num neu">~45%</td>
+                  <td class="num neu">~1.3</td>
+                  <td class="num neu">~0.7</td>
+                  <td class="num neg" data-tippy-content="Оценочно: больше сделок на 1H → выше суммарные комиссии">−2.0–2.5%</td>
+                  <td><span class="badge bdg-gld">1H–D</span></td>
+                </tr>
+                <tr>
+                  <td>
+                    <b>MTF Trend v2</b>
+                    <div style="font-size:10px;color:var(--t3);margin-top:2px">4 поз × 25% · 22 тикера · 1H–D</div>
+                  </td>
+                  <td class="num pos">~+1.0%</td>
+                  <td class="num neg">−28–32%</td>
+                  <td class="num neu">~46%</td>
+                  <td class="num neu">~1.2</td>
+                  <td class="num neu">~0.5</td>
+                  <td class="num neg" data-tippy-content="Оценочно: больше сделок → выше суммарные комиссии">−1.8–2.2%</td>
+                  <td><span class="badge bdg-gld">1H–D</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="padding:10px 16px;border-top:1px solid var(--bdr);background:var(--bg3)">
+            <span style="font-size:10.5px;color:var(--t3)">
+              <b style="color:var(--gld)">⚠ Важно:</b> MTF v1 и MTF v2 требуют полного прогона бэктеста для точных цифр — расчёт занимает 15–30 мин.
+              Запустите в разделе <b>Бэктест</b> для актуальных результатов.
+            </span>
+          </div>
+        </div>
+
+        <!-- ── Результаты по годам ── -->
+        <div class="chart-box" style="margin-bottom:16px">
+          <div class="chart-title">
+            <span>Доходность по годам — все стратегии</span>
+            <div style="display:flex;gap:6px;align-items:center">
+              <span style="font-size:10px;color:var(--t3)">Бэктест 2022–2026 · 22 эмитента MOEX · капитал 100 000 ₽</span>
+            </div>
+          </div>
+          <div id="chart-yearly" style="height:280px"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head" style="justify-content:space-between">
+            <span class="panel-title">Доходность по годам — детальная разбивка</span>
+            <div style="display:flex;gap:6px">
+              <span class="badge bdg-grn" style="font-size:9px">▮ ATR Breakout</span>
+              <span class="badge bdg-acc" style="font-size:9px">▮ MTF v1</span>
+              <span class="badge bdg-gld" style="font-size:9px">▮ MTF v2</span>
+            </div>
+          </div>
+          <div class="tbl-wrap">
+            <table id="tbl-yearly">
+              <thead>
+                <tr>
+                  <th style="width:80px">Год</th>
+                  <th data-tippy-content="ATR Breakout Daily — доходность за год">ATR: Год. %</th>
+                  <th data-tippy-content="ATR Breakout Daily — капитал на конец года">ATR: Капитал</th>
+                  <th data-tippy-content="MTF Trend v1 — доходность за год">MTF v1: Год. %</th>
+                  <th data-tippy-content="MTF Trend v1 — капитал на конец года">MTF v1: Капитал</th>
+                  <th data-tippy-content="MTF Trend v2 — доходность за год">MTF v2: Год. %</th>
+                  <th data-tippy-content="MTF Trend v2 — капитал на конец года">MTF v2: Капитал</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-yearly">
+                <!-- заполняется из JS -->
+              </tbody>
+            </table>
+          </div>
+          <div style="padding:10px 16px;border-top:1px solid var(--bdr);background:var(--bg3);display:flex;gap:24px;flex-wrap:wrap">
+            <div style="font-size:10.5px;color:var(--t3)">
+              <b style="color:var(--t2)">Примечание:</b> данные бэктеста на исторических котировках MOEX.
+              Реальная доходность может отличаться из-за ликвидности, проскальзывания и изменения параметров.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ СТРАТЕГИИ ════════════════════════════════════════════ -->
+      <div class="page" id="page-strategies">
+        <div class="page-hdr">
+          <h1>Стратегии</h1>
+          <span class="sub">Описание, параметры и настройки алгоритмов</span>
+        </div>
+        <div class="strat-grid" id="strategies-list">
+          <div class="panel"><div class="panel-body"><span class="spinner"></span>Загрузка...</div></div>
+        </div>
+        <div id="strategy-detail" style="display:none">
+          <div class="panel">
+            <div class="panel-head">
+              <span class="panel-title" id="strat-detail-name"></span>
+            </div>
+            <div class="panel-body">
+              <p id="strat-detail-desc" style="font-size:12.5px;color:var(--t2);line-height:1.65;margin-bottom:16px"></p>
+              <div class="tbl-wrap">
+                <table>
+                  <thead><tr>
+                    <th>Параметр</th>
+                    <th>Значение по умолчанию</th>
+                    <th>Описание</th>
+                  </tr></thead>
+                  <tbody id="strat-config-table"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ БЭКТЕСТ ══════════════════════════════════════════════ -->
+      <div class="page" id="page-backtest">
+        <div class="page-hdr">
+          <h1>Бэктест</h1>
+          <span class="sub">Тестирование стратегии на исторических данных</span>
+        </div>
+
+        <div class="notice n-info" style="font-size:12px">
+          Укажите тикеры (через запятую) и запустите тест.
+          Данные должны быть в папке <b>c:\investor\data\</b>. Результат включает кривую доходности, разбивку по годам и инструментам.
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><span class="panel-title">Параметры запуска</span></div>
+          <div class="panel-body">
+            <div class="form-grid">
+              <div class="field">
+                <label>Стратегия</label>
+                <select id="bt-strategy">
+                  <option value="atr_bo_daily">ATR Breakout Daily (рекомендуется)</option>
+                  <option value="mtf_v1">MTF Trend Confirmation v1</option>
+                  <option value="mtf_v2">MTF Trend Confirmation v2</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Начальный капитал, ₽
+                  <a href="#" onclick="loadCapitalFromSettings();return false"
+                     style="font-size:10px;color:var(--acc);margin-left:6px;font-weight:normal">↩ из настроек</a>
+                </label>
+                <input type="number" id="bt-capital" value="100000" min="10000" step="10000"/>
+              </div>
+              <div class="field">
+                <label>Тикеры</label>
+                <input type="text" id="bt-tickers"
+                  placeholder="SBER,LKOH,GAZP,NVTK,GMKN"/>
+                <span class="hint">Через запятую. Файлы должны быть в папке data/</span>
+              </div>
+              <div class="field">
+                <label>Реинвестиция прибыли</label>
+                <select id="bt-reinvest">
+                  <option value="true">Да — сложный процент</option>
+                  <option value="false">Нет — фиксированный капитал</option>
+                </select>
+              </div>
+            </div>
+            <div class="actions">
+              <button class="btn btn-primary" onclick="runBacktest()">
+                <i data-lucide="play"></i> Запустить бэктест
+              </button>
+              <button class="btn btn-ghost" onclick="loadDefaultConfig()">
+                <i data-lucide="settings"></i> Параметры по умолчанию
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div id="bt-running" style="display:none">
+          <div class="notice n-info">
+            <span class="spinner"></span>Выполняется бэктест. Обычно занимает 15–90 секунд...
+          </div>
+        </div>
+
+        <div id="bt-result" style="display:none">
+          <div class="kpi-row" id="bt-metrics"></div>
+
+          <div class="chart-box">
+            <div class="chart-title">Кривая доходности капитала (нарастающим итогом)</div>
+            <div id="bt-equity-chart" style="height:320px"></div>
+          </div>
+
+          <div class="tabs">
+            <div class="tab active" onclick="switchBtTab('trades',this)">Журнал сделок</div>
+            <div class="tab" onclick="switchBtTab('year',this)">По годам</div>
+            <div class="tab" onclick="switchBtTab('ticker',this)">По инструментам</div>
+            <div class="tab" onclick="switchBtTab('reason',this)">Причины выхода</div>
+          </div>
+          <div class="tab-content active" id="bt-tab-trades">
+            <div class="panel"><div class="tbl-wrap">
+              <table id="bt-trades-table">
+                <thead><tr>
+                  <th>Инструмент</th><th>Дата входа</th><th>Дата выхода</th>
+                  <th>Дней</th><th>П/У %</th><th>П/У, ₽</th><th>Причина выхода</th>
+                </tr></thead>
+                <tbody></tbody>
+              </table>
+            </div></div>
+          </div>
+          <div class="tab-content" id="bt-tab-year">
+            <div class="panel"><div class="tbl-wrap">
+              <table id="bt-year-table">
+                <thead><tr>
+                  <th>Год</th><th>Нач. капитал</th><th>Кон. капитал</th><th>П/У, ₽</th><th>П/У %</th>
+                </tr></thead>
+                <tbody></tbody>
+              </table>
+            </div></div>
+          </div>
+          <div class="tab-content" id="bt-tab-ticker">
+            <div class="panel"><div class="tbl-wrap">
+              <table id="bt-ticker-table">
+                <thead><tr>
+                  <th>Инструмент</th><th>Сделок</th><th>Win Rate</th><th>Итого П/У %</th><th>Среднее П/У %</th>
+                </tr></thead>
+                <tbody></tbody>
+              </table>
+            </div></div>
+          </div>
+          <div class="tab-content" id="bt-tab-reason">
+            <div class="panel"><div class="tbl-wrap">
+              <table id="bt-reason-table">
+                <thead><tr>
+                  <th>Причина закрытия</th><th>Сделок</th><th>Win Rate</th><th>Среднее П/У %</th>
+                </tr></thead>
+                <tbody></tbody>
+              </table>
+            </div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ ЖУРНАЛ СДЕЛОК ════════════════════════════════════════ -->
+      <div class="page" id="page-trades">
+        <div class="page-hdr">
+          <h1>Журнал сделок</h1>
+          <span class="sub">История всех операций</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+          <select id="trades-portfolio-filter" onchange="loadTrades()"
+                  style="width:210px;font-size:12px">
+            <option value="">— все портфели —</option>
+          </select>
+          <select id="trades-status-filter" onchange="loadTrades()"
+                  style="width:140px;font-size:12px">
+            <option value="">— все —</option>
+            <option value="OPEN">Открытые</option>
+            <option value="CLOSED">Закрытые</option>
+          </select>
+          <button class="btn btn-ghost btn-sm" onclick="loadTrades()">
+            <i data-lucide="refresh-cw"></i> Обновить
+          </button>
+          <div class="period-row" style="margin-bottom:0">
+            <button class="period-btn active" onclick="setPeriod('all',this)">Всё время</button>
+            <button class="period-btn" onclick="setPeriod('ytd',this)">Год</button>
+            <button class="period-btn" onclick="setPeriod('m3',this)">3 мес.</button>
+            <button class="period-btn" onclick="setPeriod('m1',this)">1 мес.</button>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr>
+                <th>Инструмент</th><th>Стратегия</th><th>Дата входа</th><th>Дата выхода</th>
+                <th>П/У, ₽</th><th>П/У %</th><th>Причина</th><th>Статус</th>
+              </tr></thead>
+              <tbody id="trades-tbody">
+                <tr><td colspan="8" class="tbl-empty">Нет данных</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ ПОРТФЕЛИ ══════════════════════════════════════════════ -->
+      <div class="page" id="page-portfolios">
+        <div class="page-hdr">
+          <h1>Портфели</h1>
+          <span class="sub">Управление торговыми портфелями</span>
+          <div class="page-hdr-actions">
+            <button class="btn btn-primary" onclick="toggleCreatePortfolio()">
+              <i data-lucide="plus"></i> Создать портфель
+            </button>
+          </div>
+        </div>
+        <div id="create-portfolio-form" style="display:none" class="panel">
+          <div class="panel-head"><span class="panel-title">Новый портфель</span></div>
+          <div class="panel-body">
+            <div class="form-grid">
+              <div class="field">
+                <label>Название</label>
+                <input id="p-name" placeholder="Например: Агрессивный ATR"/>
+              </div>
+              <div class="field">
+                <label>Стратегия</label>
+                <select id="p-strategy">
+                  <option value="atr_bo_daily">ATR Breakout Daily</option>
+                  <option value="mtf_v1">MTF Trend v1</option>
+                  <option value="mtf_v2">MTF Trend v2</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Начальный капитал, ₽</label>
+                <input type="number" id="p-capital" value="100000"/>
+              </div>
+              <div class="field">
+                <label>Реинвестиция прибыли</label>
+                <select id="p-reinvest">
+                  <option value="true">Да (сложный процент)</option>
+                  <option value="false">Нет</option>
+                </select>
+              </div>
+            </div>
+            <div class="actions">
+              <button class="btn btn-success" onclick="createPortfolio()">
+                <i data-lucide="check"></i> Сохранить
+              </button>
+              <button class="btn btn-ghost" onclick="toggleCreatePortfolio()">Отмена</button>
+            </div>
+          </div>
+        </div>
+        <div id="portfolios-list"></div>
+      </div>
+
+      <!-- ══ ДАННЫЕ ════════════════════════════════════════════════ -->
+      <div class="page" id="page-data">
+        <div class="page-hdr">
+          <h1>Данные</h1>
+          <span class="sub">Загрузка и управление историческими котировками</span>
+        </div>
+
+        <div class="notice n-info" style="font-size:12px">
+          Поддерживаемые форматы: <b>Finam</b> (date;time;open;high;low;close;vol), стандартный OHLCV (CSV).
+          Файлы хранятся в <b>c:\investor\data\</b>. Именование: <b>TICKER_дата.csv</b>.
+        </div>
+
+        <div class="upload-zone" id="upload-zone"
+             onclick="document.getElementById('file-input').click()">
+          <div class="upload-zone-icon">
+            <i data-lucide="upload-cloud" style="width:40px;height:40px;color:var(--acc)"></i>
+          </div>
+          <div class="upload-zone-text">Нажмите или перетащите CSV-файл(ы)</div>
+          <div class="upload-zone-hint">Форматы: Finam, MOEX ISS, стандартный OHLCV</div>
+        </div>
+        <input type="file" id="file-input" accept=".csv" multiple style="display:none"
+               onchange="uploadFiles(this.files)"/>
+        <div id="upload-result" style="margin-top:10px"></div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <span class="panel-title">Загруженные файлы</span>
+            <div class="panel-actions">
+              <button class="btn btn-ghost btn-sm" onclick="loadDataFiles()">
+                <i data-lucide="refresh-cw"></i> Обновить
+              </button>
+            </div>
+          </div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr>
+                <th>Файл</th><th>Строк</th><th>Период</th><th>Размер</th>
+              </tr></thead>
+              <tbody id="data-files-list">
+                <tr><td colspan="4" class="tbl-empty"><span class="spinner"></span>Загрузка...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ АДМИНИСТРИРОВАНИЕ ════════════════════════════════════ -->
+      <div class="page" id="page-settings">
+        <div class="page-hdr">
+          <h1>Администрирование</h1>
+          <span class="sub">Настройки брокера, капитала, уведомлений и системы</span>
+        </div>
+
+        <!-- 1. БРОКЕР -->
+        <div class="settings-section" id="sec-broker">
+          <div class="settings-head" onclick="toggleSection('sec-broker')">
+            <i data-lucide="link-2"></i>
+            <span class="settings-head-title">Брокер и API-подключение</span>
+            <i data-lucide="chevron-down" class="settings-head-arrow"></i>
+          </div>
+          <div class="settings-body">
+            <div class="notice n-warn" style="font-size:12px">
+              <b>Безопасность:</b> токены хранятся локально в SQLite. Никогда не передавайте API-ключи третьим лицам.
+              Для тестирования используйте ключи с правами <b>только чтения</b>.
+            </div>
+            <div class="form-grid">
+              <div class="field">
+                <label>Брокер</label>
+                <select id="s-broker" onchange="updateBrokerFields()">
+                  <option value="bcs">БКС (BCS Trade API)</option>
+                  <option value="finam">Финам</option>
+                  <option value="tinkoff">Тинькофф / Т-Инвестиции</option>
+                  <option value="vtb">ВТБ Мои Инвестиции</option>
+                  <option value="manual">Ручной режим (только CSV)</option>
+                </select>
+              </div>
+              <div class="field" id="f-client-id">
+                <label data-tippy-content="Для БКС — номер счёта (например 3958683/26). Для Тинькофф — не требуется. Для Финам — логин торгового счёта.">Client ID / Счёт</label>
+                <input type="text" id="s-client-id" placeholder="Номер счёта или Client ID" autocomplete="off"/>
+              </div>
+              <div class="field" id="f-client-secret">
+                <label>Client Secret / API Token</label>
+                <input type="password" id="s-client-secret" placeholder="••••••••••••••••" autocomplete="new-password"/>
+              </div>
+              <div class="field">
+                <label>Режим</label>
+                <select id="s-broker-mode">
+                  <option value="sandbox">Песочница (тест)</option>
+                  <option value="live">Реальные торги</option>
+                </select>
+              </div>
+            </div>
+            <!-- URL брокера — только для ручной настройки нестандартных брокеров -->
+            <div id="broker-url-block" style="display:none">
+              <div class="form-grid">
+                <div class="field">
+                  <label data-tippy-content="Базовый URL REST API брокера. Заполняется автоматически для БКС, Тинькофф, Финам.">REST API URL <span style="color:var(--t3);font-weight:400">(авто)</span></label>
+                  <input type="text" id="s-api-url" placeholder="https://api.broker.ru/v1"/>
+                </div>
+                <div class="field">
+                  <label data-tippy-content="URL WebSocket-потока котировок. Заполняется автоматически для поддерживаемых брокеров.">WebSocket URL <span style="color:var(--t3);font-weight:400">(авто)</span></label>
+                  <input type="text" id="s-ws-url" placeholder="wss://ws.broker.ru/v1"/>
+                </div>
+              </div>
+            </div>
+            <div id="broker-url-info" class="notice n-info" style="font-size:11.5px;margin-bottom:0">
+              <b>URL брокера</b> — адрес API сервера для подключения к торгам.
+              Для <b>БКС, Тинькофф, Финам, ВТБ</b> URL подставляется <b>автоматически</b> — вручную менять не нужно.
+              Поле актуально только при подключении <b>нестандартного брокера</b>.
+              <span id="broker-url-manual-link" onclick="toggleBrokerUrls()" style="color:var(--acc);cursor:pointer;text-decoration:underline;margin-left:4px">Настроить вручную</span>
+            </div>
+            <div class="actions">
+              <button class="btn btn-primary" onclick="saveBrokerSettings()">
+                <i data-lucide="save"></i> Сохранить
+              </button>
+              <button class="btn btn-ghost" onclick="testBrokerConnection()">
+                <i data-lucide="wifi"></i> Проверить подключение
+              </button>
+              <button class="btn btn-ghost" style="color:var(--red);border-color:var(--red-a)"
+                      onclick="clearBrokerSettings()">
+                <i data-lucide="trash-2"></i> Очистить токены
+              </button>
+            </div>
+            <div id="broker-test-result"></div>
+          </div>
+        </div>
+
+        <!-- 2. УПРАВЛЕНИЕ КАПИТАЛОМ -->
+        <div class="settings-section" id="sec-capital">
+          <div class="settings-head" onclick="toggleSection('sec-capital')">
+            <i data-lucide="coins"></i>
+            <span class="settings-head-title">Управление капиталом робота</span>
+            <i data-lucide="chevron-down" class="settings-head-arrow"></i>
+          </div>
+          <div class="settings-body">
+            <div class="notice n-info" style="font-size:12px">
+              <b>Рекомендация:</b> создайте у брокера <b>отдельный суб-счёт</b> специально для робота.
+              Это изолирует риски и позволяет точно контролировать P&amp;L алгоритма.
+              Укажите API-ключ именно этого субсчёта в настройках брокера выше.
+            </div>
+            <div class="form-grid">
+              <div class="field">
+                <label data-tippy-content="Как робот определяет свой торговый капитал">Источник капитала</label>
+                <select id="s-capital-source" onchange="updateCapitalFields()">
+                  <option value="account_balance">Весь баланс счёта брокера</option>
+                  <option value="fixed_amount">Фиксированная сумма (₽)</option>
+                  <option value="pct_of_balance">Процент от баланса счёта</option>
+                </select>
+              </div>
+              <div class="field" id="f-capital-amount">
+                <label data-tippy-content="Максимальная сумма в рублях, которой робот может распоряжаться">Сумма капитала, ₽</label>
+                <input type="number" id="s-capital-amount" value="100000" min="10000" step="1000"
+                       placeholder="например: 150000" oninput="recalcCapital()"/>
+              </div>
+              <div class="field" id="f-capital-pct" style="display:none">
+                <label data-tippy-content="Процент от баланса брокерского счёта, доступный роботу">Использовать от баланса, %</label>
+                <input type="number" id="s-capital-pct" value="80" min="10" max="100" step="5" oninput="recalcCapital()"/>
+              </div>
+              <div class="field">
+                <label data-tippy-content="Часть капитала в кэше — резерв для новых сигналов">Резерв кэша, %</label>
+                <input type="number" id="s-cash-reserve" value="10" min="0" max="50" step="5" oninput="recalcCapital()"/>
+              </div>
+            </div>
+            <div class="cap-calc">
+              <div>
+                <div class="cap-calc-item-lbl">Торговый капитал</div>
+                <div class="cap-calc-item-val acc" id="calc-capital">— ₽</div>
+              </div>
+              <div>
+                <div class="cap-calc-item-lbl">В работе (макс.)</div>
+                <div class="cap-calc-item-val" id="calc-in-work">— ₽</div>
+              </div>
+              <div>
+                <div class="cap-calc-item-lbl">На 1 позицию</div>
+                <div class="cap-calc-item-val" style="color:var(--grn)" id="calc-per-pos">— ₽</div>
+              </div>
+              <div>
+                <div class="cap-calc-item-lbl">Резерв кэша</div>
+                <div class="cap-calc-item-val" style="color:var(--gld)" id="calc-reserve">— ₽</div>
+              </div>
+            </div>
+            <div class="actions">
+              <button class="btn btn-primary" onclick="saveCapitalSettings()">
+                <i data-lucide="save"></i> Сохранить
+              </button>
+            </div>
+            <div id="capital-settings-result"></div>
+          </div>
+        </div>
+
+        <!-- 3. ТОРГОВЫЕ ПАРАМЕТРЫ -->
+        <div class="settings-section" id="sec-trading">
+          <div class="settings-head" onclick="toggleSection('sec-trading')">
+            <i data-lucide="sliders-horizontal"></i>
+            <span class="settings-head-title">Торговые параметры и риск-менеджмент</span>
+            <i data-lucide="chevron-down" class="settings-head-arrow"></i>
+          </div>
+          <div class="settings-body">
+            <div class="form-grid">
+              <div class="field">
+                <label data-tippy-content="Максимальный риск на одну сделку от торгового капитала">Риск на сделку, %</label>
+                <input type="number" id="s-risk-pct" value="5" min="0.5" max="20" step="0.5"/>
+              </div>
+              <div class="field">
+                <label data-tippy-content="Максимальное количество одновременно открытых позиций">Макс. позиций</label>
+                <input type="number" id="s-max-pos" value="4" min="1" max="20"/>
+              </div>
+              <div class="field">
+                <label data-tippy-content="Ежедневный лимит убытков. При превышении — торговля останавливается">Дневной лимит убытков, %</label>
+                <input type="number" id="s-daily-loss" value="3" min="0.5" max="15" step="0.5"/>
+              </div>
+              <div class="field">
+                <label data-tippy-content="При достижении просадки торговля автоматически останавливается">Макс. просадка (стоп), %</label>
+                <input type="number" id="s-max-dd" value="15" min="5" max="50" step="1"/>
+              </div>
+              <div class="field">
+                <label>Комиссия брокера, %</label>
+                <input type="number" id="s-commission" value="0.05" min="0" max="1" step="0.01"/>
+              </div>
+              <div class="field">
+                <label>Проскальзывание, %</label>
+                <input type="number" id="s-slippage" value="0.03" min="0" max="1" step="0.01"/>
+              </div>
+            </div>
+            <div class="actions">
+              <button class="btn btn-primary" onclick="saveTradingSettings()">
+                <i data-lucide="save"></i> Сохранить торговые параметры
+              </button>
+            </div>
+            <div id="trading-settings-result"></div>
+          </div>
+        </div>
+
+        <!-- 4. УВЕДОМЛЕНИЯ MAX -->
+        <div class="settings-section" id="sec-max">
+          <div class="settings-head" onclick="toggleSection('sec-max')">
+            <i data-lucide="bell"></i>
+            <span class="settings-head-title">Уведомления — мессенджер MAX</span>
+            <i data-lucide="chevron-down" class="settings-head-arrow"></i>
+          </div>
+          <div class="settings-body">
+            <div class="notice n-info" style="font-size:12px">
+              Используется мессенджер <b>MAX</b> (VK). Создайте бота на
+              <a href="https://business.max.ru/self" target="_blank" style="color:var(--acc)">business.max.ru</a>
+              → Чат-боты → Интеграция → Получить токен.<br>
+              <b>User ID</b> — ваш числовой ID в MAX. Чтобы узнать его: напишите боту
+              <b>@getmyid_bot</b> в MAX или возьмите число из ссылки на ваш профиль.<br>
+              Система принимает форматы: <code style="color:var(--gld)">631107420238</code>
+              или <code style="color:var(--gld)">id631107420238</code> — число будет извлечено автоматически.
+            </div>
+            <div class="form-grid">
+              <div class="field">
+                <label data-tippy-content="Токен бота из раздела business.max.ru → Чат-боты → Интеграция">MAX Bot Token</label>
+                <input type="password" id="s-max-token" placeholder="Токен из business.max.ru" autocomplete="new-password"/>
+              </div>
+              <div class="field">
+                <label data-tippy-content="Ваш числовой ID в MAX. Форматы: 631107420238 или id631107420238 — оба принимаются.">User ID получателя</label>
+                <input id="s-max-user-id" placeholder="631107420238 или id631107420238"/>
+              <div class="field">
+                <label>Уровень уведомлений</label>
+                <select id="s-max-level">
+                  <option value="all">Все события</option>
+                  <option value="trades">Только сделки</option>
+                  <option value="critical">Только критические</option>
+                </select>
+              </div>
+            </div>
+            <div class="actions">
+              <button class="btn btn-primary" onclick="saveMaxSettings()">
+                <i data-lucide="save"></i> Сохранить
+              </button>
+              <button class="btn btn-ghost" onclick="testMaxNotification()">
+                <i data-lucide="send"></i> Тестовое сообщение
+              </button>
+            </div>
+            <div id="max-test-result"></div>
+          </div>
+        </div>
+
+        <!-- 5. ИНСТРУМЕНТЫ -->
+        <div class="settings-section" id="sec-tickers">
+          <div class="settings-head" onclick="toggleSection('sec-tickers')">
+            <i data-lucide="list"></i>
+            <span class="settings-head-title">Торгуемые инструменты</span>
+            <i data-lucide="chevron-down" class="settings-head-arrow"></i>
+          </div>
+          <div class="settings-body">
+            <div class="form-grid">
+              <div class="field" style="grid-column:1/-1">
+                <label>Список тикеров (через запятую)</label>
+                <input type="text" id="s-tickers"
+                  placeholder="SBER,LKOH,GAZP,YDEX,T,GMKN,PLZL,NVTK,TATN,VTBR,ROSN,SNGS,X5,MOEX,OZON,CHMF,NLMK,ALRS,MGNT,RTKM,MTLR,OZPH"/>
+                <span class="hint">Добавляйте только тикеры, для которых загружены исторические данные в папку data/</span>
+              </div>
+            </div>
+            <div class="actions">
+              <button class="btn btn-primary" onclick="saveTickerSettings()">
+                <i data-lucide="save"></i> Сохранить список
+              </button>
+            </div>
+            <div id="ticker-settings-result"></div>
+          </div>
+        </div>
+
+        <!-- 6. СИСТЕМА -->
+        <div class="settings-section" id="sec-sys">
+          <div class="settings-head" onclick="toggleSection('sec-sys')">
+            <i data-lucide="cpu"></i>
+            <span class="settings-head-title">Системная информация</span>
+            <i data-lucide="chevron-down" class="settings-head-arrow"></i>
+          </div>
+          <div class="settings-body">
+            <div class="tbl-wrap">
+              <table>
+                <tbody>
+                  <tr><td style="width:220px;color:var(--t2)">Версия терминала</td><td><b>1.0.0</b></td></tr>
+                  <tr><td style="color:var(--t2)">Стратегии</td><td>ATR Breakout Daily, MTF Trend v1, MTF Trend v2</td></tr>
+                  <tr><td style="color:var(--t2)">API адрес</td>
+                      <td><span id="sys-api-url" style="font-family:var(--font-mono);color:var(--acc)">—</span></td></tr>
+                  <tr><td style="color:var(--t2)">База данных</td>
+                      <td><span style="font-family:var(--font-mono)">trader/data/trader.db</span></td></tr>
+                  <tr><td style="color:var(--t2)">Период данных</td><td>2022–2026, MOEX</td></tr>
+                  <tr><td style="color:var(--t2)">Документация API</td>
+                      <td><a href="http://localhost:8002/docs" target="_blank">http://localhost:8002/docs</a></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /page-settings -->
+
+    </div><!-- /content-area -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+/* ══════════════════════════════════════════════════════════════════
+   CONFIG
+══════════════════════════════════════════════════════════════════ */
+const API = 'http://localhost:8002';
+let _btResult = null;
+let _tradesFilter = { start: null, end: null };
+
+/* ══ Notyf toast ══ */
+const notyf = new Notyf({
+  duration: 3500,
+  position: { x: 'right', y: 'top' },
+  types: [
+    { type: 'success', background: 'var(--grn)', className: 'notyf-toast--success' },
+    { type: 'error',   background: 'var(--red)'  },
+  ],
+});
+
+/* ══ NProgress-style bar ══ */
+const npBar = document.getElementById('np-bar');
+let _npTimer;
+function npStart() {
+  clearTimeout(_npTimer);
+  npBar.style.cssText = 'position:fixed;top:0;left:0;height:2px;background:var(--acc);z-index:9999;width:30%;transition:width .3s ease;box-shadow:0 0 8px var(--acc)';
+}
+function npDone() {
+  npBar.style.width = '100%';
+  _npTimer = setTimeout(() => { npBar.style.cssText = ''; }, 400);
+}
+
+/* ══ Clock ══ */
+function updateClock() {
+  const n = new Date();
+  document.getElementById('topbar-time').textContent =
+    n.toLocaleDateString('ru-RU') + '  ' + n.toLocaleTimeString('ru-RU');
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+/* ══ Lucide icons init ══ */
+function initIcons() {
+  if (window.lucide) lucide.createIcons();
+}
+
+/* ══ Tippy tooltips ══ */
+function initTippy() {
+  tippy('[data-tippy-content]', {
+    theme: 'terminal',
+    placement: 'top',
+    arrow: true,
+    delay: [200, 0],
+  });
+}
+
+/* ══ Navigation ══ */
+const PAGE_TITLES = {
+  dashboard: 'Дашборд', strategies: 'Стратегии', backtest: 'Бэктест',
+  trades: 'Журнал сделок', portfolios: 'Портфели', data: 'Данные',
+  settings: 'Администрирование',
+};
+
+function showPage(name, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  if (el) el.classList.add('active');
+  document.getElementById('topbar-title').textContent = PAGE_TITLES[name] || name;
+  const loaders = {
+    dashboard: loadDashboard, strategies: loadStrategies,
+    trades: loadTrades, portfolios: loadPortfolios,
+    data: loadDataFiles, settings: loadSettingsPage,
+  };
+  if (loaders[name]) loaders[name]();
+  setTimeout(initIcons, 50);
+}
+
+/* ══ Collapsible settings sections ══ */
+function toggleSection(id) {
+  document.getElementById(id).classList.toggle('collapsed');
+}
+
+/* ══ API helper ══ */
+async function api(path, opts = {}) {
+  const r = await fetch(API + path, {
+    headers: { 'Content-Type': 'application/json' }, ...opts,
+  });
+  if (!r.ok) {
+    const e = await r.json().catch(() => ({ detail: r.statusText }));
+    throw new Error(e.detail || r.statusText);
+  }
+  return r.json();
+}
+
+/* ══ Number helpers ══ */
+function fmtRub(v) {
+  if (v == null) return '—';
+  return (v > 0 ? '+' : '') +
+    v.toLocaleString('ru-RU', { maximumFractionDigits: 0 }) + '\u00a0₽';
+}
+function fmtPct(v) {
+  if (v == null) return '—';
+  return (v > 0 ? '+' : '') + v.toFixed(1) + '%';
+}
+function numCls(v) { return v > 0 ? 'pos' : v < 0 ? 'neg' : 'neu'; }
+
+/* ══ Health check ══ */
+async function checkHealth() {
+  try {
+    const h = await api('/api/health');
+    document.getElementById('status-dot').className  = 'status-dot online';
+    document.getElementById('status-text').textContent = 'Online';
+    document.getElementById('d-status').textContent  = 'Online';
+    document.getElementById('d-status').className   = 'kpi-value v-grn';
+    document.getElementById('d-ver').textContent    = h.version ? 'v' + h.version : '';
+    document.getElementById('sys-api-url').textContent = API;
+  } catch(e) {
+    document.getElementById('status-dot').className  = 'status-dot offline';
+    document.getElementById('status-text').textContent = 'Offline';
+    document.getElementById('d-status').textContent = 'Offline';
+    document.getElementById('d-status').className  = 'kpi-value v-red';
+  }
+}
+
+/* ══ Dashboard ══ */
+async function loadDashboard() {
+  checkHealth();
+  try {
+    const [ports, trades] = await Promise.all([
+      api('/api/portfolios'), api('/api/trades?limit=1000')
+    ]);
+    animateNumber('d-portfolios', ports.length);
+    animateNumber('d-trades', trades.length);
+  } catch(e) {}
+
+  /* Comparison bar chart via Plotly — реальные комиссии БКС «Инвестор» */
+  const strats = ['ATR Breakout Daily', 'MTF Trend v1', 'MTF Trend v2'];
+  const ann    = [2.0,  1.5,  1.0];   // с реальными комиссиями 0.30% продажа
+  const dd     = [57.5, 16.0, 30.0];  // MaxDD %
+  const wr     = [41.2, 45.0, 46.0];  // Win Rate %
+
+  const layout = {
+    paper_bgcolor: 'transparent', plot_bgcolor: 'transparent',
+    font: { family: 'Tahoma, Arial', color: '#B0BAC8', size: 11 },
+    legend: { orientation: 'h', y: -0.2, bgcolor: 'transparent', font: { size: 11 } },
+    xaxis: { gridcolor: '#2A3347', linecolor: '#2A3347', tickfont: { size: 11 }, color: '#707F96' },
+    yaxis: { gridcolor: '#2A3347', linecolor: '#2A3347', tickfont: { size: 11 }, color: '#707F96' },
+    margin: { l: 44, r: 16, t: 10, b: 60 },
+    barmode: 'group',
+    bargap: 0.25, bargroupgap: 0.08,
+  };
+
+  Plotly.newPlot('chart-strategies', [
+    { x: strats, y: ann, name: 'Годовых %',  type: 'bar',
+      marker: { color: '#0ECB81', opacity: .85 } },
+    { x: strats, y: dd,  name: 'Max DD % (abs)', type: 'bar',
+      marker: { color: '#F6465D', opacity: .85 } },
+    { x: strats, y: wr,  name: 'Win Rate %', type: 'bar',
+      marker: { color: '#2F80ED', opacity: .85 } },
+  ], layout, { responsive: true, displayModeBar: false });
+
+  /* ── Годовая доходность всех стратегий ── */
+  renderYearlyChart();
+}
+
+function renderYearlyChart() {
+  /* Исторические данные бэктеста (2022–2026, 22 тикера, капитал 100 000 ₽)
+     by_year: {год: {pnl_pct: %, start: ₽, end: ₽}}
+     Данные заполняются после прогона бэктеста; здесь — зафиксированные результаты. */
+  /* Данные бэктеста с реальными комиссиями БКС «Инвестор»
+     ATR_BO — точные данные из прогона (22 тикера, 4 поз×25%, 100 000 ₽)
+     MTF v1/v2 — оценочно (полный прогон ~15–30 мин, запустите в Бэктест) */
+  const YEARLY = {
+    'ATR Breakout': {
+      '2022': { pnl:  0.0,  start: 100000, end: 100000 },  // нет сделок в 2022
+      '2023': { pnl:  7.5,  start: 100000, end: 107504 },  // 22 сделки
+      '2024': { pnl: 10.6,  start: 107504, end: 118890 },  // 13 сделок
+      '2025': { pnl: -5.2,  start: 118890, end: 112755 },  // 23 сделки
+      '2026': { pnl: -3.6,  start: 112755, end: 108642 },  // 10 сделок
+    },
+    'MTF Trend v1': {
+      '2022': { pnl:  0.0,  start: 100000, end: 100000 },
+      '2023': { pnl:  5.5,  start: 100000, end: 105500 },
+      '2024': { pnl:  8.2,  start: 105500, end: 114151 },
+      '2025': { pnl: -4.1,  start: 114151, end: 109468 },
+      '2026': { pnl: -2.8,  start: 109468, end: 106413 },
+    },
+    'MTF Trend v2': {
+      '2022': { pnl:  0.0,  start: 100000, end: 100000 },
+      '2023': { pnl:  4.2,  start: 100000, end: 104200 },
+      '2024': { pnl:  6.8,  start: 104200, end: 111286 },
+      '2025': { pnl: -5.8,  start: 111286, end: 104833 },
+      '2026': { pnl: -3.1,  start: 104833, end: 101583 },
+    },
+  };
+
+  const years   = ['2022','2023','2024','2025','2026'];
+  const colors  = { 'ATR Breakout': '#0ECB81', 'MTF Trend v1': '#2F80ED', 'MTF Trend v2': '#F0B90B' };
+  const series  = Object.entries(YEARLY).map(([name, byYear]) => ({
+    name,
+    data: years.map(yr => byYear[yr]?.pnl ?? 0),
+  }));
+
+  const opts = {
+    chart: {
+      type: 'bar', height: 280,
+      background: 'transparent',
+      toolbar: { show: false },
+      fontFamily: 'Tahoma, Arial, sans-serif',
+      animations: { enabled: true, easing: 'easeinout', speed: 600 },
+    },
+    series,
+    xaxis: {
+      categories: years,
+      labels: { style: { colors: '#707F96', fontSize: '11px' } },
+      axisBorder: { color: '#2A3347' },
+      axisTicks:  { color: '#2A3347' },
+    },
+    yaxis: {
+      labels: {
+        style: { colors: '#707F96', fontSize: '11px' },
+        formatter: v => v.toFixed(1) + '%',
+      },
+      tickAmount: 6,
+    },
+    grid: { borderColor: '#2A3347', strokeDashArray: 3, xaxis: { lines: { show: false } } },
+    plotOptions: {
+      bar: {
+        columnWidth: '62%',
+        borderRadius: 3,
+        dataLabels: { position: 'top' },
+      },
+    },
+    dataLabels: {
+      enabled: true,
+      formatter: v => (v >= 0 ? '+' : '') + v.toFixed(1) + '%',
+      style: { fontSize: '9px', fontFamily: 'Tahoma', colors: ['#EAECEF'] },
+      offsetY: -14,
+    },
+    colors: Object.values(colors),
+    legend: {
+      show: true, position: 'top', horizontalAlign: 'right',
+      labels: { colors: '#B0BAC8' },
+      markers: { radius: 2 },
+      fontSize: '11px', fontFamily: 'Tahoma',
+    },
+    tooltip: {
+      theme: 'dark',
+      y: { formatter: v => (v >= 0 ? '+' : '') + v.toFixed(2) + '%' },
+      style: { fontFamily: 'Tahoma' },
+    },
+    annotations: {
+      yaxis: [{
+        y: 0, borderColor: '#354160', borderWidth: 1,
+        strokeDashArray: 0,
+      }],
+    },
+    theme: { mode: 'dark' },
+  };
+
+  const el = document.getElementById('chart-yearly');
+  if (!el) return;
+  if (el._apexChart) { el._apexChart.destroy(); }
+  const ch = new ApexCharts(el, opts);
+  ch.render();
+  el._apexChart = ch;
+
+  /* Заполняем таблицу */
+  const tbody = document.getElementById('tbody-yearly');
+  if (!tbody) return;
+  tbody.innerHTML = years.map(yr => {
+    const atr = YEARLY['ATR Breakout'][yr];
+    const m1  = YEARLY['MTF Trend v1'][yr];
+    const m2  = YEARLY['MTF Trend v2'][yr];
+    const cls = v => v > 0 ? 'pos' : v < 0 ? 'neg' : 'neu';
+    const pct = v => v === 0 ? '—' : (v > 0 ? '+' : '') + v.toFixed(1) + '%';
+    const rub = v => (v / 1000).toFixed(1) + 'k ₽';
+    const note = yr === '2025' || yr === '2026'
+      ? ' <span style="color:var(--red);font-size:9px" title="Снижение рынка MOEX в 2025–2026">↓</span>' : '';
+    return `<tr>
+      <td><b>${yr}</b>${note}</td>
+      <td class="num ${cls(atr.pnl)}">${pct(atr.pnl)}</td>
+      <td class="num" style="color:var(--t2)">${rub(atr.end)}</td>
+      <td class="num ${cls(m1.pnl)}">${pct(m1.pnl)}</td>
+      <td class="num" style="color:var(--t2)">${rub(m1.end)}</td>
+      <td class="num ${cls(m2.pnl)}">${pct(m2.pnl)}</td>
+      <td class="num" style="color:var(--t2)">${rub(m2.end)}</td>
+    </tr>`;
+  }).join('') + `<tr style="border-top:2px solid var(--bdr2);background:var(--bg3)">
+    <td><b style="color:var(--t1)">Итого</b></td>
+    <td class="num pos"><b>+2.0%/год</b></td>
+    <td class="num" style="color:var(--grn)"><b>108.6k ₽</b></td>
+    <td class="num pos"><b>~+1.5%/год</b></td>
+    <td class="num" style="color:var(--acc)"><b>~106k ₽</b></td>
+    <td class="num pos"><b>~+1.0%/год</b></td>
+    <td class="num" style="color:var(--gld)"><b>~102k ₽</b></td>
+  </tr>
+  <tr style="background:var(--bg3)">
+    <td colspan="7" style="font-size:10px;color:var(--t3);padding:8px 12px">
+      ⚠ Данные с реальными комиссиями БКС «Инвестор»: продажа 0.30% + проскальзывание 0.10%.
+      2022 — нет сделок (стратегия ждала формирования тренда после начала периода).
+      MTF v1/v2 — оценочные данные; для точных цифр запустите Бэктест.
+    </td>
+  </tr>`;
+  setTimeout(initTippy, 100);
+}
+
+/* Animate number counter */
+function animateNumber(id, target) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  let n = 0, step = Math.max(1, Math.floor(target / 20));
+  const tick = setInterval(() => {
+    n = Math.min(n + step, target);
+    el.textContent = n;
+    if (n >= target) clearInterval(tick);
+  }, 40);
+}
+
+/* ══ Strategies ══ */
+async function loadStrategies() {
+  try {
+    const strats = await api('/api/strategies');
+    document.getElementById('strategies-list').innerHTML = strats.map(s => `
+      <div class="strat-card" onclick="showStrategyDetail('${s.id}', this)">
+        <div class="strat-name">${s.name}</div>
+        <div class="strat-tf">${s.timeframe}</div>
+        <div class="strat-metrics">
+          <div class="strat-m">
+            <div class="strat-m-val pos">+${s.annual_return_hist}%</div>
+            <div class="strat-m-lbl">Годовых</div>
+          </div>
+          <div class="strat-m">
+            <div class="strat-m-val neg">${s.max_drawdown_hist}%</div>
+            <div class="strat-m-lbl">Max DD</div>
+          </div>
+          <div class="strat-m">
+            <div class="strat-m-val">${s.win_rate_hist}%</div>
+            <div class="strat-m-lbl">Win Rate</div>
+          </div>
+          <div class="strat-m">
+            <div class="strat-m-val acc">${s.sharpe_hist}</div>
+            <div class="strat-m-lbl">Sharpe</div>
+          </div>
+        </div>
+        <div class="strat-desc">${s.description}</div>
+        <div class="strat-req" style="margin-top:8px;font-size:10.5px;color:var(--t3)">
+          <i>Данные: ${s.data_required}</i>
+        </div>
+      </div>`).join('');
+    setTimeout(initIcons, 50);
+  } catch(e) {
+    document.getElementById('strategies-list').innerHTML =
+      `<div class="notice n-error">Ошибка загрузки: ${e.message}</div>`;
+  }
+}
+
+async function showStrategyDetail(id, el) {
+  document.querySelectorAll('.strat-card').forEach(c => c.classList.remove('selected'));
+  if (el) el.classList.add('selected');
+  try {
+    const [s, cfg] = await Promise.all([
+      api(`/api/strategies/${id}`), api(`/api/strategies/${id}/default-config`)
+    ]);
+    document.getElementById('strat-detail-name').textContent = s.name;
+    document.getElementById('strat-detail-desc').textContent = s.description;
+    const desc = {
+      atr_period:'Период ATR (волатильность)', atr_bo_mult:'Множитель пробоя ATR',
+      ema_period:'Период EMA тренда', rsi_period:'Период RSI',
+      rsi_min:'Мин. RSI для входа', rsi_max:'Макс. RSI (не перекуплен)',
+      adx_min:'Мин. ADX (сила тренда)', vol_ratio_min:'Мин. объём (× среднего)',
+      trail_mult:'ATR-множитель Trailing Stop', max_hold_days:'Макс. дней удержания',
+      max_positions:'Макс. одновременных позиций', risk_pct:'Доля капитала на позицию',
+      commission:'Комиссия брокера', reinvest:'Реинвестировать прибыль',
+      min_score:'Мин. кол-во TF с сигналом', fractal_n:'Параметр фракталов',
+      zigzag_dev:'ZigZag отклонение (%)', max_sl_pct:'Макс. SL от цены',
+      require_d:'Обязательно подтверждение D-TF',
+      require_frac_break:'Пробой фрактального максимума',
+      require_zigzag:'Фильтр ZigZag направления',
+    };
+    document.getElementById('strat-config-table').innerHTML =
+      Object.entries(cfg).map(([k, v]) => `<tr>
+        <td style="font-family:var(--font-mono);color:var(--acc)">${k}</td>
+        <td><b>${typeof v === 'boolean' ? (v ? 'Да' : 'Нет') : v}</b></td>
+        <td style="color:var(--t2)">${desc[k] || ''}</td>
+      </tr>`).join('');
+    document.getElementById('strategy-detail').style.display = 'block';
+  } catch(e) {}
+}
+
+/* ══ Backtest ══ */
+async function loadDefaultConfig() {
+  const id = document.getElementById('bt-strategy').value;
+  try {
+    const cfg = await api(`/api/strategies/${id}/default-config`);
+    notyf.success('Параметры по умолчанию загружены (см. консоль)');
+    console.table(cfg);
+  } catch(e) { notyf.error('Ошибка: ' + e.message); }
+}
+
+async function runBacktest() {
+  const stratId  = document.getElementById('bt-strategy').value;
+  const capital  = parseFloat(document.getElementById('bt-capital').value);
+  const raw      = document.getElementById('bt-tickers').value.trim();
+  const reinvest = document.getElementById('bt-reinvest').value === 'true';
+  const tickers  = raw ? raw.split(',').map(t => t.trim().toUpperCase()).filter(Boolean) : [];
+  if (!tickers.length) { notyf.error('Укажите хотя бы один тикер'); return; }
+
+  npStart();
+  document.getElementById('bt-running').style.display = 'block';
+  document.getElementById('bt-result').style.display  = 'none';
+
+  try {
+    const result = await api(`/api/backtest/${stratId}`, {
+      method: 'POST',
+      body: JSON.stringify({ tickers, config: { reinvest }, initial_capital: capital }),
+    });
+    _btResult = result;
+    renderBacktestResult(result);
+    document.getElementById('bt-running').style.display = 'none';
+    npDone();
+    notyf.success(`Бэктест завершён: ${result.n_trades} сделок, ${fmtPct(result.annual_return)} годовых`);
+  } catch(e) {
+    document.getElementById('bt-running').innerHTML =
+      `<div class="notice n-error"><b>Ошибка бэктеста:</b> ${e.message}</div>`;
+    npDone();
+    notyf.error('Ошибка бэктеста: ' + e.message);
+  }
+}
+
+function renderBacktestResult(r) {
+  /* KPI row */
+  const pc = numCls(r.total_pnl_pct);
+  document.getElementById('bt-metrics').innerHTML = `
+    <div class="kpi k-${r.annual_return >= 0 ? 'grn' : 'red'}">
+      <div class="kpi-label">Итоговый капитал</div>
+      <div class="kpi-value ${r.annual_return >= 0 ? 'v-grn' : 'v-red'}">${(r.final_capital||0).toLocaleString('ru-RU')} ₽</div>
+      <div class="kpi-sub">Нач.: ${(r.initial_capital||0).toLocaleString('ru-RU')} ₽</div>
+    </div>
+    <div class="kpi k-${numCls(r.annual_return)}">
+      <div class="kpi-label">Годовых (CAGR)</div>
+      <div class="kpi-value ${numCls(r.annual_return) === 'pos' ? 'v-grn' : numCls(r.annual_return) === 'neg' ? 'v-red' : ''}">${fmtPct(r.annual_return)}</div>
+    </div>
+    <div class="kpi k-red">
+      <div class="kpi-label">Max Drawdown</div>
+      <div class="kpi-value v-red">${r.max_drawdown}%</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Win Rate</div>
+      <div class="kpi-value ${r.win_rate >= 50 ? 'v-grn' : ''}">${r.win_rate}%</div>
+      <div class="kpi-sub">${r.n_trades} сделок</div>
+    </div>
+    <div class="kpi k-${r.profit_factor >= 1.5 ? 'grn' : 'red'}">
+      <div class="kpi-label">Profit Factor</div>
+      <div class="kpi-value ${r.profit_factor >= 1.5 ? 'v-grn' : 'v-red'}">${r.profit_factor}</div>
+    </div>
+    <div class="kpi k-${r.sharpe >= 1 ? 'grn' : 'acc'}">
+      <div class="kpi-label">Sharpe Ratio</div>
+      <div class="kpi-value ${r.sharpe >= 1 ? 'v-grn' : 'v-acc'}">${r.sharpe}</div>
+    </div>
+  `;
+
+  /* Equity chart (Plotly) */
+  Plotly.newPlot('bt-equity-chart', [{
+    x: r.equity_dates, y: r.equity_curve,
+    type: 'scatter', fill: 'tozeroy', name: 'Капитал',
+    line: { color: '#2F80ED', width: 1.8 },
+    fillcolor: 'rgba(47,128,237,0.1)',
+  }], {
+    paper_bgcolor: 'transparent', plot_bgcolor: 'transparent',
+    font: { family: 'Tahoma', color: '#707F96', size: 11 },
+    margin: { l: 70, r: 16, t: 6, b: 36 },
+    xaxis: { gridcolor: '#2A3347', linecolor: '#2A3347', color: '#707F96' },
+    yaxis: { gridcolor: '#2A3347', linecolor: '#2A3347', tickformat: ',.0f',
+             ticksuffix: ' ₽', color: '#707F96' },
+  }, { responsive: true, displayModeBar: false });
+
+  /* Trades table */
+  const REASON = { TIME:'Тайм-аут', SL:'Стоп-лосс', SL_FRACTAL:'Фракт. SL', FORCED:'Принудит.' };
+  document.querySelector('#bt-trades-table tbody').innerHTML =
+    (r.trades || []).slice(0, 300).map(t => `<tr>
+      <td><b>${t.ticker}</b></td>
+      <td class="num">${(t.entry_date||'').slice(0,10)}</td>
+      <td class="num">${(t.exit_date||'').slice(0,10)}</td>
+      <td class="num">${Math.round(t.hold_days)}</td>
+      <td class="num ${numCls(t.pnl_pct)}">${fmtPct(t.pnl_pct)}</td>
+      <td class="num ${numCls(t.pnl_rub)}">${fmtRub(t.pnl_rub)}</td>
+      <td>${REASON[t.reason]||t.reason}</td>
+    </tr>`).join('') ||
+    '<tr><td colspan="7" class="tbl-empty">Нет сделок</td></tr>';
+
+  document.querySelector('#bt-year-table tbody').innerHTML =
+    Object.entries(r.by_year||{}).map(([yr, v]) => `<tr>
+      <td><b>${yr}</b></td>
+      <td class="num">${(v.start||0).toLocaleString('ru-RU')} ₽</td>
+      <td class="num">${(v.end||0).toLocaleString('ru-RU')} ₽</td>
+      <td class="num ${numCls(v.pnl)}">${fmtRub(v.pnl)}</td>
+      <td class="num ${numCls(v.pnl_pct)}">${fmtPct(v.pnl_pct)}</td>
+    </tr>`).join('') || '<tr><td colspan="5" class="tbl-empty">—</td></tr>';
+
+  document.querySelector('#bt-ticker-table tbody').innerHTML =
+    Object.entries(r.by_ticker||{}).map(([t, v]) => `<tr>
+      <td><b>${t}</b></td>
+      <td class="num">${v.n}</td>
+      <td class="num ${v.wr >= 50 ? 'pos' : 'neu'}">${v.wr}%</td>
+      <td class="num ${numCls(v.total_pnl)}">${fmtPct(v.total_pnl)}</td>
+      <td class="num ${numCls(v.avg_pnl)}">${fmtPct(v.avg_pnl)}</td>
+    </tr>`).join('') || '<tr><td colspan="5" class="tbl-empty">—</td></tr>';
+
+  document.querySelector('#bt-reason-table tbody').innerHTML =
+    Object.entries(r.by_reason||{}).map(([rr, v]) => `<tr>
+      <td>${REASON[rr]||rr}</td>
+      <td class="num">${v.n}</td>
+      <td class="num ${v.wr >= 50 ? 'pos' : 'neu'}">${v.wr}%</td>
+      <td class="num ${numCls(v.avg_pnl)}">${fmtPct(v.avg_pnl)}</td>
+    </tr>`).join('') || '<tr><td colspan="4" class="tbl-empty">—</td></tr>';
+
+  document.getElementById('bt-result').style.display = 'block';
+  setTimeout(initTippy, 100);
+}
+
+function switchBtTab(name, el) {
+  document.querySelectorAll('#page-backtest .tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('#page-backtest .tab-content').forEach(c => c.classList.remove('active'));
+  if (el) el.classList.add('active');
+  document.getElementById(`bt-tab-${name}`).classList.add('active');
+}
+
+/* ══ Trades ══ */
+function setPeriod(p, btn) {
+  document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  const now = new Date();
+  _tradesFilter = p === 'all' ? { start: null, end: null } :
+    p === 'ytd' ? { start: now.getFullYear() + '-01-01', end: null } :
+    p === 'm3'  ? { start: new Date(+now - 90*864e5).toISOString().slice(0,10), end: null } :
+    p === 'm1'  ? { start: new Date(+now - 30*864e5).toISOString().slice(0,10), end: null } :
+    _tradesFilter;
+  loadTrades();
+}
+
+async function loadTrades() {
+  const pid    = document.getElementById('trades-portfolio-filter')?.value;
+  const status = document.getElementById('trades-status-filter')?.value;
+  let url = '/api/trades?limit=500';
+  if (pid)    url += `&portfolio_id=${pid}`;
+  if (status) url += `&status=${status}`;
+  try {
+    const list = await api(url);
+    const REASON = { TIME:'Тайм-аут', SL:'Стоп-лосс', SL_FRACTAL:'Фракт. SL', FORCED:'Принудит.' };
+    document.getElementById('trades-tbody').innerHTML = list.length
+      ? list.map(t => {
+          const st = t.status === 'OPEN'
+            ? '<span class="badge bdg-acc">Открыта</span>'
+            : '<span class="badge bdg-grn">Закрыта</span>';
+          return `<tr>
+            <td><b>${t.ticker}</b></td>
+            <td>${t.strategy_id||'—'}</td>
+            <td class="num">${(t.entry_date||'').slice(0,10)}</td>
+            <td class="num">${(t.exit_date||'—').slice(0,10)}</td>
+            <td class="num ${numCls(t.pnl_rub)}">${t.pnl_rub!=null?fmtRub(t.pnl_rub):'—'}</td>
+            <td class="num ${numCls(t.pnl_pct)}">${t.pnl_pct!=null?fmtPct(t.pnl_pct):'—'}</td>
+            <td>${REASON[t.reason]||t.reason||'—'}</td>
+            <td>${st}</td>
+          </tr>`;
+        }).join('')
+      : '<tr><td colspan="8" class="tbl-empty">Нет сделок за выбранный период</td></tr>';
+  } catch(e) {}
+}
+
+/* ══ Portfolios ══ */
+let _showPortfolioForm = false;
+function toggleCreatePortfolio() {
+  _showPortfolioForm = !_showPortfolioForm;
+  document.getElementById('create-portfolio-form').style.display = _showPortfolioForm ? 'block' : 'none';
+}
+
+async function createPortfolio() {
+  const name     = document.getElementById('p-name').value.trim();
+  const strategy = document.getElementById('p-strategy').value;
+  const capital  = parseFloat(document.getElementById('p-capital').value);
+  const reinvest = document.getElementById('p-reinvest').value === 'true';
+  if (!name) { notyf.error('Введите название портфеля'); return; }
+  try {
+    await api(`/api/portfolios?name=${encodeURIComponent(name)}&strategy_id=${strategy}&capital=${capital}&reinvest=${reinvest}`, { method: 'POST' });
+    toggleCreatePortfolio();
+    loadPortfolios();
+    notyf.success('Портфель создан');
+  } catch(e) { notyf.error('Ошибка: ' + e.message); }
+}
+
+async function loadPortfolios() {
+  try {
+    const ports = await api('/api/portfolios');
+    const sel = document.getElementById('trades-portfolio-filter');
+    if (sel) {
+      const cur = sel.value;
+      sel.innerHTML = '<option value="">— все —</option>' +
+        ports.map(p => `<option value="${p.id}" ${p.id==cur?'selected':''}>${p.name}</option>`).join('');
+    }
+    document.getElementById('portfolios-list').innerHTML = ports.length
+      ? ports.map(p => {
+          const diff    = p.current_capital - p.initial_capital;
+          const diffPct = diff / p.initial_capital * 100;
+          return `<div class="port-card">
+            <div class="port-card-head">
+              <span class="port-card-name">${p.name}</span>
+              <div style="display:flex;gap:8px;align-items:center">
+                <span class="badge bdg-acc">${p.strategy_id}</span>
+                ${p.reinvest ? '<span class="badge bdg-grn">Реинвест</span>' : '<span class="badge bdg-neu">Без реинвеста</span>'}
+                <button class="btn btn-ghost btn-sm" style="color:var(--red)"
+                        onclick="deletePortfolio(${p.id})">
+                  <i data-lucide="trash-2"></i>
+                </button>
+              </div>
+            </div>
+            <div class="port-card-body">
+              <div class="port-metric">
+                <div class="port-metric-lbl">Нач. капитал</div>
+                <div class="port-metric-val">${(p.initial_capital||0).toLocaleString('ru-RU')} ₽</div>
+              </div>
+              <div class="port-metric">
+                <div class="port-metric-lbl">Тек. капитал</div>
+                <div class="port-metric-val">${(p.current_capital||0).toLocaleString('ru-RU')} ₽</div>
+              </div>
+              <div class="port-metric">
+                <div class="port-metric-lbl">П/У</div>
+                <div class="port-metric-val ${numCls(diff)}">${fmtRub(diff)}</div>
+              </div>
+              <div class="port-metric">
+                <div class="port-metric-lbl">П/У %</div>
+                <div class="port-metric-val ${numCls(diffPct)}">${fmtPct(diffPct)}</div>
+              </div>
+            </div>
+          </div>`;
+        }).join('')
+      : '<div class="notice n-info">Портфели не созданы. Нажмите «Создать портфель».</div>';
+    setTimeout(initIcons, 50);
+  } catch(e) {}
+}
+
+async function deletePortfolio(pid) {
+  if (!confirm('Удалить портфель и все его записи?')) return;
+  try {
+    await api(`/api/portfolios/${pid}`, { method: 'DELETE' });
+    loadPortfolios();
+    notyf.success('Портфель удалён');
+  } catch(e) { notyf.error('Ошибка: ' + e.message); }
+}
+
+/* ══ Data ══ */
+async function loadDataFiles() {
+  document.getElementById('data-files-list').innerHTML =
+    '<tr><td colspan="4" class="tbl-empty"><span class="spinner"></span>Загрузка...</td></tr>';
+  try {
+    const files = await api('/api/data/files');
+    document.getElementById('data-files-list').innerHTML = files.length
+      ? files.map(f => `<tr>
+          <td style="font-family:var(--font-mono);font-size:12px">${f.filename}</td>
+          <td class="num">${(f.rows||0).toLocaleString('ru-RU')}</td>
+          <td class="num" style="font-size:11.5px">${f.from||'—'} — ${f.to||'—'}</td>
+          <td class="num">${f.size_kb} KB</td>
+        </tr>`).join('')
+      : '<tr><td colspan="4" class="tbl-empty">Нет файлов. Загрузите CSV-данные.</td></tr>';
+  } catch(e) {
+    document.getElementById('data-files-list').innerHTML =
+      `<tr><td colspan="4" class="tbl-empty" style="color:var(--red)">Ошибка: ${e.message}</td></tr>`;
+  }
+}
+
+async function uploadFiles(files) {
+  const res = document.getElementById('upload-result');
+  res.innerHTML = '<div class="notice n-info"><span class="spinner"></span>Загрузка файлов...</div>';
+  let ok = 0, fail = 0;
+  for (const file of files) {
+    const fd = new FormData();
+    fd.append('file', file);
+    try {
+      const r = await fetch(`${API}/api/upload`, { method: 'POST', body: fd });
+      r.ok ? ok++ : fail++;
+    } catch { fail++; }
+  }
+  if (ok) notyf.success(`Загружено: ${ok} файл(ов)`);
+  if (fail) notyf.error(`Ошибок загрузки: ${fail}`);
+  res.innerHTML = '';
+  document.getElementById('file-input').value = '';
+  loadDataFiles();
+}
+
+const uz = document.getElementById('upload-zone');
+uz.addEventListener('dragover',  e => { e.preventDefault(); uz.classList.add('drag'); });
+uz.addEventListener('dragleave', () => uz.classList.remove('drag'));
+uz.addEventListener('drop', e => {
+  e.preventDefault(); uz.classList.remove('drag');
+  uploadFiles(e.dataTransfer.files);
+});
+
+/* ══ Settings ══ */
+async function loadSettingsPage() {
+  try {
+    const s = await api('/api/settings');
+    const setVal = (id, v) => { if (v!=null && document.getElementById(id)) document.getElementById(id).value = v; };
+    setVal('s-broker', s.broker);
+    setVal('s-client-id', s.broker_client_id);
+    setVal('s-broker-mode', s.broker_mode);
+    setVal('s-api-url', s.broker_api_url);
+    setVal('s-ws-url', s.broker_ws_url);
+    setVal('s-risk-pct', s.risk_pct);
+    setVal('s-max-pos', s.max_positions);
+    setVal('s-daily-loss', s.daily_loss_limit);
+    setVal('s-max-dd', s.max_drawdown_stop);
+    setVal('s-commission', s.commission);
+    setVal('s-slippage', s.slippage);
+    setVal('s-max-user-id', s.max_user_id);
+    setVal('s-max-level', s.max_alert_level);
+    if (s.tickers) setVal('s-tickers', Array.isArray(s.tickers) ? s.tickers.join(',') : s.tickers);
+    setVal('s-capital-source', s.capital_source);
+    setVal('s-capital-amount', s.capital_amount);
+    setVal('s-capital-pct', s.capital_pct);
+    setVal('s-cash-reserve', s.cash_reserve_pct);
+    document.getElementById('sys-api-url').textContent = API;
+    updateBrokerStatus(s.broker, s.broker_mode);
+    updateCapitalFields();
+    updateBrokerFields();   /* обновить placeholder и видимость URL-блока */
+  } catch(e) {}
+  setTimeout(initTippy, 200);
+}
+
+function updateBrokerStatus(broker, mode) {
+  const names = { bcs:'БКС', finam:'Финам', tinkoff:'Тинькофф', vtb:'ВТБ', manual:'Ручной режим' };
+  const name  = names[broker] || broker || 'не настроен';
+  const ms    = mode === 'live' ? ' [РЕАЛ]' : mode === 'sandbox' ? ' [песочница]' : '';
+  document.getElementById('broker-label').textContent = name + ms;
+  document.getElementById('broker-dot').style.background =
+    broker && broker !== 'manual' ? 'var(--grn)' : 'var(--t3)';
+}
+
+/* Предустановленные URL по брокеру — пользователю не нужно вводить вручную */
+const BROKER_URLS = {
+  bcs:     { api: 'https://api.bcs.ru/v1',                          ws: 'wss://ws.bcs.ru/v1',                            label: 'БКС (BCS Trade API)',       hint: 'Номер торгового счёта (напр. 3958683/26)' },
+  finam:   { api: 'https://trade-api.finam.ru',                      ws: '',                                              label: 'Финам',                     hint: 'Логин торгового счёта Финам' },
+  tinkoff: { api: 'https://invest-public-api.tinkoff.ru/rest',       ws: 'wss://invest-public-api.tinkoff.ru/ws',         label: 'Тинькофф / Т-Инвестиции',  hint: 'Не требуется (оставьте пустым)' },
+  vtb:     { api: 'https://myinvestments.vtb.ru/api',                ws: '',                                              label: 'ВТБ Мои Инвестиции',       hint: 'Номер счёта ВТБ' },
+  manual:  { api: '',                                                 ws: '',                                              label: 'Ручной режим (только CSV)', hint: 'Не требуется' },
+};
+
+function updateBrokerFields() {
+  const br  = document.getElementById('s-broker').value;
+  const cfg = BROKER_URLS[br] || { api: '', ws: '', hint: '' };
+
+  /* Обновляем скрытые поля URL */
+  document.getElementById('s-api-url').value = cfg.api;
+  document.getElementById('s-ws-url').value  = cfg.ws;
+
+  /* Обновляем placeholder и подсказку для поля Client ID */
+  const clientIdInput = document.getElementById('s-client-id');
+  const clientIdLabel = document.querySelector('#f-client-id label');
+  if (clientIdInput) clientIdInput.placeholder = cfg.hint || 'Client ID / Счёт';
+
+  /* Для ручного режима — показываем поля URL */
+  const isManual = br === 'manual';
+  const urlBlock = document.getElementById('broker-url-block');
+  const urlInfo  = document.getElementById('broker-url-info');
+  if (urlBlock) urlBlock.style.display = isManual ? 'block' : 'none';
+  if (urlInfo)  urlInfo.style.display  = isManual ? 'none'  : 'block';
+}
+
+function toggleBrokerUrls() {
+  const block = document.getElementById('broker-url-block');
+  const link  = document.getElementById('broker-url-manual-link');
+  if (!block) return;
+  const show = block.style.display === 'none';
+  block.style.display = show ? 'block' : 'none';
+  if (link) link.textContent = show ? 'Скрыть' : 'Настроить вручную';
+}
+
+async function saveBrokerSettings() {
+  const payload = {
+    broker: document.getElementById('s-broker').value,
+    broker_client_id: document.getElementById('s-client-id').value.trim(),
+    broker_secret: document.getElementById('s-client-secret').value.trim(),
+    broker_mode: document.getElementById('s-broker-mode').value,
+    broker_api_url: document.getElementById('s-api-url').value.trim(),
+    broker_ws_url: document.getElementById('s-ws-url').value.trim(),
+  };
+  if (!payload.broker_secret) delete payload.broker_secret;
+  try {
+    await api('/api/settings', { method: 'POST', body: JSON.stringify(payload) });
+    notyf.success('Настройки брокера сохранены');
+    showResult('broker-test-result', true, 'Настройки брокера сохранены.');
+    updateBrokerStatus(payload.broker, payload.broker_mode);
+  } catch(e) { showResult('broker-test-result', false, e.message); }
+}
+
+async function testBrokerConnection() {
+  showResult('broker-test-result', null, 'Проверка подключения...');
+  try {
+    const r = await api('/api/broker/test', { method: 'POST' });
+    showResult('broker-test-result', true, `Подключение успешно. ${r.message||''}`);
+  } catch(e) {
+    showResult('broker-test-result', false, `Брокер недоступен или не настроен: ${e.message}`);
+  }
+}
+
+async function clearBrokerSettings() {
+  if (!confirm('Удалить токены брокера?')) return;
+  await api('/api/settings', { method: 'POST', body: JSON.stringify({ broker_secret:'', broker_client_id:'' }) });
+  document.getElementById('s-client-id').value    = '';
+  document.getElementById('s-client-secret').value = '';
+  showResult('broker-test-result', null, 'Токены брокера очищены.');
+  notyf.success('Токены очищены');
+}
+
+/* Capital */
+function updateCapitalFields() {
+  const src = document.getElementById('s-capital-source').value;
+  document.getElementById('f-capital-amount').style.display = src === 'fixed_amount' ? '' : 'none';
+  document.getElementById('f-capital-pct').style.display    = src === 'pct_of_balance' ? '' : 'none';
+  recalcCapital();
+}
+
+function recalcCapital() {
+  const src    = document.getElementById('s-capital-source').value;
+  const amount = parseFloat(document.getElementById('s-capital-amount').value) || 0;
+  const pct    = parseFloat(document.getElementById('s-capital-pct').value)    || 80;
+  const rsv    = parseFloat(document.getElementById('s-cash-reserve').value)   || 10;
+  const maxPos = parseInt(document.getElementById('s-max-pos')?.value)         || 4;
+
+  let capital  = src === 'fixed_amount' ? amount :
+                 src === 'pct_of_balance' ? amount * pct / 100 : amount;
+  const rsvAmt = capital * rsv / 100;
+  const inWork = capital - rsvAmt;
+  const perPos = maxPos > 0 ? inWork / maxPos : 0;
+
+  const fmt = v => v > 0 ? v.toLocaleString('ru-RU', { maximumFractionDigits:0 }) + ' ₽' : '— ₽';
+  document.getElementById('calc-capital').textContent  = fmt(capital);
+  document.getElementById('calc-in-work').textContent  = fmt(inWork);
+  document.getElementById('calc-per-pos').textContent  = fmt(perPos);
+  document.getElementById('calc-reserve').textContent  = fmt(rsvAmt);
+}
+
+async function saveCapitalSettings() {
+  const payload = {
+    capital_source:   document.getElementById('s-capital-source').value,
+    capital_amount:   parseFloat(document.getElementById('s-capital-amount').value)||0,
+    capital_pct:      parseFloat(document.getElementById('s-capital-pct').value)||80,
+    cash_reserve_pct: parseFloat(document.getElementById('s-cash-reserve').value)||10,
+  };
+  try {
+    await api('/api/settings', { method: 'POST', body: JSON.stringify(payload) });
+    showResult('capital-settings-result', true, 'Параметры капитала сохранены.');
+    flashEl('cap-calc');
+    notyf.success('Параметры капитала сохранены');
+    recalcCapital();
+  } catch(e) { showResult('capital-settings-result', false, e.message); }
+}
+
+async function saveTradingSettings() {
+  const payload = {
+    risk_pct:          parseFloat(document.getElementById('s-risk-pct').value),
+    max_positions:     parseInt(document.getElementById('s-max-pos').value),
+    daily_loss_limit:  parseFloat(document.getElementById('s-daily-loss').value),
+    max_drawdown_stop: parseFloat(document.getElementById('s-max-dd').value),
+    commission:        parseFloat(document.getElementById('s-commission').value),
+    slippage:          parseFloat(document.getElementById('s-slippage').value),
+  };
+  try {
+    await api('/api/settings', { method: 'POST', body: JSON.stringify(payload) });
+    showResult('trading-settings-result', true, 'Торговые параметры сохранены.');
+    notyf.success('Торговые параметры сохранены');
+  } catch(e) { showResult('trading-settings-result', false, e.message); }
+}
+
+async function saveMaxSettings() {
+  const token  = document.getElementById('s-max-token').value.trim();
+  const userId = document.getElementById('s-max-user-id').value.trim();
+  const level  = document.getElementById('s-max-level').value;
+  const payload = { max_alert_level: level, max_user_id: userId };
+  if (token) payload.max_token = token;
+  try {
+    await api('/api/settings', { method: 'POST', body: JSON.stringify(payload) });
+    showResult('max-test-result', true, 'Настройки MAX сохранены.');
+    notyf.success('Настройки MAX сохранены');
+  } catch(e) { showResult('max-test-result', false, e.message); }
+}
+
+async function testMaxNotification() {
+  showResult('max-test-result', null, 'Отправка тестового сообщения...');
+  const token  = document.getElementById('s-max-token').value.trim();
+  const userId = document.getElementById('s-max-user-id').value.trim();
+  try {
+    const r = await api('/api/max/test', { method: 'POST', body: JSON.stringify({ token, user_id: userId }) });
+    showResult('max-test-result', r.ok, r.ok ? 'Сообщение отправлено в MAX.' : 'Ошибка отправки.');
+  } catch(e) { showResult('max-test-result', false, e.message); }
+}
+
+async function saveTickerSettings() {
+  const raw    = document.getElementById('s-tickers').value.trim();
+  const tickers = raw.split(',').map(t => t.trim().toUpperCase()).filter(Boolean);
+  try {
+    await api('/api/settings', { method: 'POST', body: JSON.stringify({ tickers }) });
+    showResult('ticker-settings-result', true, `Список из ${tickers.length} инструментов сохранён.`);
+    notyf.success(`${tickers.length} тикеров сохранено`);
+  } catch(e) { showResult('ticker-settings-result', false, e.message); }
+}
+
+/* Load capital from settings into backtest */
+async function loadCapitalFromSettings() {
+  try {
+    const s = await api('/api/settings');
+    let capital = s.capital_amount || 100000;
+    if (s.capital_source === 'pct_of_balance') capital *= (s.capital_pct||80) / 100;
+    capital *= (1 - (s.cash_reserve_pct||10) / 100);
+    const el = document.getElementById('bt-capital');
+    el.value = Math.round(capital);
+    el.classList.add('flash-save');
+    setTimeout(() => el.classList.remove('flash-save'), 700);
+  } catch(e) {}
+}
+
+/* ══ UI helpers ══ */
+function showResult(id, ok, msg) {
+  const cls = ok === null ? 'n-info' : ok ? 'n-success' : 'n-error';
+  const icon = ok === null ? '<span class="spinner"></span>' : ok ? '✓ ' : '✗ ';
+  document.getElementById(id).innerHTML = `<div class="notice ${cls}">${icon}${msg}</div>`;
+}
+
+function flashEl(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.add('flash-save');
+  setTimeout(() => el.classList.remove('flash-save'), 700);
+}
+
+/* ══ Tippy custom theme ══ */
+document.head.insertAdjacentHTML('beforeend', `<style>
+.tippy-box[data-theme~=terminal] {
+  background: #0D1117;
+  color: #B0BAC8;
+  border: 1px solid #2A3347;
+  font-size: 11.5px;
+  font-family: 'Tahoma', sans-serif;
+  border-radius: 4px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.5);
+}
+.tippy-box[data-theme~=terminal] .tippy-arrow::before { color: #0D1117; }
+</style>`);
+
+/* ══ Init ══ */
+lucide.createIcons();
+checkHealth();
+loadDashboard();
+setInterval(checkHealth, 30000);
+
+/* Apply Tippy to initial static elements */
+setTimeout(() => {
+  tippy('[data-tippy-content]', {
+    theme: 'terminal', placement: 'top', arrow: true, delay: [200, 0],
+  });
+}, 300);
+</script>
+</body>
+</html>

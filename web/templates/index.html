@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Momentum Filter Trader v2</title>
+  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+  <style>
+    :root{
+      --bg:#0d1117; --surface:#161b22; --s2:#1c2333; --s3:#21262d;
+      --border:#30363d; --accent:#7c4dff; --a2:#00e5ff; --a3:#a78bfa;
+      --green:#3fb950; --red:#f85149; --yellow:#d29922; --orange:#e3702c;
+      --text:#c9d1d9; --dim:#8b949e; --r:8px;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--bg);color:var(--text);font-family:'Inter','Segoe UI',system-ui,sans-serif;font-size:13px;height:100vh;overflow:hidden}
+
+    /* ── Header ── */
+    header{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:12px;height:46px;flex-shrink:0}
+    .logo{font-size:1.05rem;font-weight:700;color:var(--a2);letter-spacing:-.02em}
+    .logo sub{font-size:.65rem;color:var(--dim);font-weight:400;margin-left:4px}
+    .header-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+    .pill{background:rgba(124,77,255,.15);border:1px solid rgba(124,77,255,.35);color:var(--a3);padding:2px 10px;border-radius:20px;font-size:.7rem;font-weight:600;letter-spacing:.04em}
+
+    /* ── Layout ── */
+    .layout{display:grid;grid-template-columns:290px 1fr;height:calc(100vh - 46px)}
+
+    /* ── Sidebar ── */
+    .sidebar{background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
+    /* custom scrollbar */
+    .sidebar::-webkit-scrollbar{width:4px}.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+    .card{background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:12px}
+    .card-title{font-size:.65rem;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--dim);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+    .card-title::before{content:'';display:inline-block;width:3px;height:10px;background:var(--accent);border-radius:2px}
+
+    /* Tabs */
+    .tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:10px}
+    .tab{flex:1;padding:6px;text-align:center;font-size:.72rem;font-weight:600;cursor:pointer;color:var(--dim);border-bottom:2px solid transparent;transition:all .15s}
+    .tab:hover{color:var(--text)}
+    .tab.active{color:var(--a2);border-bottom-color:var(--a2)}
+    .tab-panel{display:none}.tab-panel.active{display:block}
+
+    /* Upload zone */
+    .upload-zone{border:1.5px dashed var(--border);border-radius:var(--r);padding:12px 8px;text-align:center;cursor:pointer;transition:all .2s;color:var(--dim);font-size:.75rem;line-height:1.6}
+    .upload-zone:hover{border-color:var(--accent);color:var(--accent)}
+    .upload-zone.ok{border-color:var(--green);color:var(--green);background:rgba(63,185,80,.05)}
+    .upload-zone input{display:none}
+    .info-box{font-size:.7rem;color:var(--dim);margin-top:6px;line-height:1.7;background:var(--s3);border-radius:5px;padding:6px 8px}
+
+    /* Controls */
+    label{display:block;font-size:.72rem;color:var(--dim);margin-top:8px;margin-bottom:2px}
+    label:first-of-type{margin-top:0}
+    select,input[type=number],input[type=text]{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--text);padding:5px 8px;font-size:.8rem;outline:none;transition:border-color .15s}
+    select:focus,input:focus{border-color:var(--accent)}
+    select option{background:var(--s2)}
+    .scheme-tip{font-size:.67rem;color:var(--dim);margin-top:4px;line-height:1.5;padding:5px 7px;background:rgba(0,229,255,.05);border-radius:4px;border-left:2px solid rgba(0,229,255,.3)}
+
+    /* Buttons */
+    .btn{width:100%;padding:8px 10px;border:none;border-radius:6px;font-size:.8rem;font-weight:600;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:5px}
+    .btn:disabled{opacity:.45;cursor:not-allowed}
+    .btn-primary{background:var(--accent);color:#fff}
+    .btn-primary:hover:not(:disabled){background:#6c3ef0}
+    .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
+    .btn-ghost:hover:not(:disabled){border-color:var(--a2);color:var(--a2)}
+    .btn-green{background:var(--green);color:#000}
+    .btn-green:hover:not(:disabled){filter:brightness(1.1)}
+    .btn-row{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+
+    /* Metrics */
+    .metrics{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+    .metric{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px;text-align:center}
+    .metric .v{font-size:1rem;font-weight:700;color:var(--a2);line-height:1.2}
+    .metric .v.pos{color:var(--green)}.metric .v.neg{color:var(--red)}.metric .v.warn{color:var(--yellow)}
+    .metric .l{font-size:.62rem;color:var(--dim);margin-top:1px}
+
+    /* Exit distribution */
+    .dist{display:flex;flex-direction:column;gap:4px}
+    .dist-row{display:flex;align-items:center;gap:6px;font-size:.72rem}
+    .dist-label{width:38px;font-weight:700;flex-shrink:0}
+    .dist-bar-wrap{flex:1;background:var(--bg);border-radius:2px;height:5px;overflow:hidden}
+    .dist-bar{height:100%;border-radius:2px;transition:width .5s}
+    .dist-bar.sl{background:var(--red)}.dist-bar.tp{background:var(--green)}.dist-bar.time{background:var(--yellow)}.dist-bar.end{background:var(--a2)}
+    .dist-n{width:26px;text-align:right;color:var(--dim);font-size:.67rem}
+    .dist-wr{width:34px;text-align:right;color:var(--a2);font-size:.67rem;font-weight:700}
+
+    /* Trades list */
+    .trade-list{max-height:200px;overflow-y:auto}
+    .trade-list::-webkit-scrollbar{width:3px}.trade-list::-webkit-scrollbar-thumb{background:var(--border)}
+    .trade-row{display:grid;grid-template-columns:22px 1fr auto;align-items:center;gap:5px;padding:4px 6px;border-radius:4px;font-size:.7rem;margin-bottom:1px;cursor:default;transition:background .1s}
+    .trade-row:hover{background:rgba(255,255,255,.04)}
+    .trade-row.win{background:rgba(63,185,80,.07)}.trade-row.loss{background:rgba(248,81,73,.07)}
+    .trade-num{color:var(--dim);text-align:right;font-size:.63rem}
+    .trade-meta{display:flex;flex-direction:column;gap:1px}
+    .trade-dt{color:var(--dim);font-size:.62rem}
+    .trade-tag{display:inline-block;padding:0 5px;border-radius:3px;font-size:.65rem;font-weight:700;width:fit-content}
+    .trade-tag.SL{background:rgba(248,81,73,.2);color:var(--red)}
+    .trade-tag.TP2,.trade-tag.TP3,.trade-tag.TP4{background:rgba(63,185,80,.2);color:var(--green)}
+    .trade-tag.TIME{background:rgba(210,153,34,.2);color:var(--yellow)}
+    .trade-tag.END{background:rgba(0,229,255,.1);color:var(--a2)}
+    .trade-pnl{font-weight:700;font-size:.78rem;white-space:nowrap;text-align:right}
+    .trade-pnl.pos{color:var(--green)}.trade-pnl.neg{color:var(--red)}
+
+    /* Comparison table */
+    .cmp-table{width:100%;font-size:.7rem;border-collapse:collapse}
+    .cmp-table th{text-align:right;color:var(--dim);padding:3px 6px;font-weight:600;border-bottom:1px solid var(--border)}
+    .cmp-table th:first-child{text-align:left}
+    .cmp-table td{padding:4px 6px;border-bottom:1px solid rgba(255,255,255,.04);text-align:right}
+    .cmp-table td:first-child{text-align:left;font-weight:600;color:var(--text)}
+    .cmp-table tr:hover td{background:rgba(255,255,255,.03)}
+    .cmp-table tr.best td{background:rgba(63,185,80,.06)}
+    .cmp-table tr.best td:first-child{color:var(--green)}
+    .td-pos{color:var(--green)}.td-neg{color:var(--red)}.td-warn{color:var(--yellow)}
+
+    /* ── Main ── */
+    .main{display:flex;flex-direction:column;overflow:hidden}
+    #chart-wrap{flex:1;min-height:0;padding:10px 14px 0}
+    #chart{width:100%;height:100%}
+
+    /* Status bar */
+    .statusbar{padding:4px 16px;background:var(--surface);border-top:1px solid var(--border);display:flex;gap:20px;font-size:.67rem;color:var(--dim);flex-shrink:0}
+    .sdot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#333;margin-right:4px;vertical-align:middle}
+    .sdot.ok{background:var(--green)}.sdot.warn{background:var(--yellow)}
+
+    /* Toast */
+    .toast{position:fixed;bottom:20px;right:20px;background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:9px 16px;font-size:.8rem;z-index:999;opacity:0;transform:translateY(8px);transition:all .22s;pointer-events:none;max-width:280px}
+    .toast.show{opacity:1;transform:none}
+    .toast.err{border-color:rgba(248,81,73,.5);color:var(--red)}
+    .toast.ok-t{border-color:rgba(63,185,80,.4);color:var(--green)}
+
+    /* Spinner */
+    .spin{display:inline-block;width:11px;height:11px;border:2px solid rgba(255,255,255,.2);border-top-color:var(--a2);border-radius:50%;animation:rot .6s linear infinite;vertical-align:middle}
+    @keyframes rot{to{transform:rotate(360deg)}}
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Momentum Filter Trader <sub>v2.0 · MOEX · Hourly</sub></div>
+  <div class="header-right">
+    <span class="pill">Stepped TP · 7 Schemes</span>
+    <button class="btn btn-ghost" id="btn-export" style="width:auto;padding:4px 12px;font-size:.72rem" disabled>⬇ Export CSV</button>
+  </div>
+</header>
+
+<div class="layout">
+
+<!-- ══ Sidebar ══ -->
+<aside class="sidebar">
+
+  <!-- Tabs: Data / Settings / Results -->
+  <div class="tabs" id="main-tabs">
+    <div class="tab active" data-tab="data">📂 Данные</div>
+    <div class="tab" data-tab="settings">⚙ Параметры</div>
+    <div class="tab" data-tab="results">📊 Результаты</div>
+  </div>
+
+  <!-- ── Tab: Data ── -->
+  <div class="tab-panel active" id="panel-data">
+    <div class="card">
+      <div class="card-title">Загрузить CSV</div>
+      <label class="upload-zone" for="csv-file" id="upload-zone">
+        <input type="file" id="csv-file" accept=".csv"/>
+        <div>📂 Выберите CSV-файл</div>
+        <div style="font-size:.68rem;color:var(--dim);margin-top:3px">Финам / MOEX ISS · 1H</div>
+      </label>
+      <div id="data-info" class="info-box" style="display:none"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Скачать с MOEX ISS</div>
+      <label>Тикер</label>
+      <input type="text" id="dl-ticker" value="SBER" placeholder="SBER, LKOH, ROSN…" style="text-transform:uppercase"/>
+      <label>История (дней)</label>
+      <input type="number" id="dl-days" value="1095" min="30" max="1825" step="30"/>
+      <div class="btn-row">
+        <button class="btn btn-green" id="btn-download">⬇ Скачать данные</button>
+      </div>
+      <div id="dl-info" class="info-box" style="display:none;margin-top:8px"></div>
+    </div>
+  </div>
+
+  <!-- ── Tab: Settings ── -->
+  <div class="tab-panel" id="panel-settings">
+    <div class="card">
+      <div class="card-title">Схема ступенчатого TP</div>
+      <select id="p-scheme"></select>
+      <div class="scheme-tip" id="scheme-tip"></div>
+      <label>Макс. держать позицию (ч)</label>
+      <input type="number" id="p-maxhold" value="96" min="12" max="240" step="12"/>
+      <label>Макс. свечей на графике</label>
+      <input type="number" id="p-candles" value="700" min="100" max="2000" step="100"/>
+      <div class="btn-row" style="margin-top:12px">
+        <button class="btn btn-primary" id="btn-bt">▶ Запустить бэктест</button>
+        <button class="btn btn-ghost" id="btn-compare">⚖ Сравнить все схемы</button>
+        <button class="btn btn-ghost" id="btn-chart">📈 Обновить график</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Tab: Results ── -->
+  <div class="tab-panel" id="panel-results">
+    <div id="results-placeholder" style="color:var(--dim);font-size:.75rem;padding:8px">
+      Запустите бэктест для просмотра результатов.
+    </div>
+
+    <!-- Metrics -->
+    <div class="card" id="card-metrics" style="display:none">
+      <div class="card-title" id="metrics-title">Результаты</div>
+      <div class="metrics" id="metrics"></div>
+    </div>
+
+    <!-- Exit distribution -->
+    <div class="card" id="card-dist" style="display:none">
+      <div class="card-title">Распределение выходов</div>
+      <div class="dist" id="dist"></div>
+    </div>
+
+    <!-- Scheme comparison -->
+    <div class="card" id="card-cmp" style="display:none">
+      <div class="card-title">Сравнение схем TP</div>
+      <div style="overflow-x:auto"><table class="cmp-table" id="cmp-table"></table></div>
+    </div>
+
+    <!-- Last trades -->
+    <div class="card" id="card-trades" style="display:none">
+      <div class="card-title">Последние сделки</div>
+      <div class="trade-list" id="trade-list"></div>
+    </div>
+  </div>
+
+</aside>
+
+<!-- ══ Main chart area ══ -->
+<main class="main">
+  <div id="chart-wrap"><div id="chart"></div></div>
+  <div class="statusbar">
+    <span><span class="sdot" id="sd-data"></span><span id="st-data">Нет данных</span></span>
+    <span><span class="sdot" id="sd-bt"></span><span id="st-bt">Бэктест не запущен</span></span>
+    <span id="st-perf" style="margin-left:auto"></span>
+  </div>
+</main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════════
+// Utilities
+// ══════════════════════════════════════════════════════════════════════
+let _toastT;
+function toast(msg, type='', dur=3500){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.className='toast show'+(type?' '+type:'');
+  clearTimeout(_toastT); _toastT=setTimeout(()=>el.className='toast',dur);
+}
+function busy(btn,on){
+  if(on){btn._h=btn.innerHTML;btn.innerHTML='<span class="spin"></span> …';btn.disabled=true}
+  else{btn.innerHTML=btn._h;btn.disabled=false}
+}
+function fmtPct(v){return (v>=0?'+':'')+v.toFixed(2)+'%'}
+function colorCls(v){return v>0?'pos':v<0?'neg':''}
+function $$(id){return document.getElementById(id)}
+
+// ── Tabs ──────────────────────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+    tab.classList.add('active');
+    $$('panel-'+tab.dataset.tab).classList.add('active');
+  });
+});
+
+// ── Load schemes ──────────────────────────────────────────────────────
+const TIPS={
+  A:'30%→30%→25%→15% при R1/1.8/3/5 — стандартная 4-уровневая',
+  B:'40%→30%→20%→10% при R1/1.8/3/5 — агрессивная фиксация',
+  C:'25%→25%→25%→25% при R1/1.8/3/5 — равномерная 4-уровневая',
+  D:'50%→20%→20%→10% при R1/1.8/3/5 — быстрая фиксация',
+  E:'40%→35%→25% при R1/2/4 — 3 уровня, широкие TPs',
+  F:'50%→30%→20% при R0.8/1.8/3.5 — лучший WR (64%)',
+  G:'60%→40% при R0.8/2 — самая ранняя фиксация, макс WR',
+};
+async function loadSchemes(){
+  const r=await fetch('/api/schemes');
+  const s=await r.json();
+  const sel=$$('p-scheme'); sel.innerHTML='';
+  for(const[k,label]of Object.entries(s)){
+    const o=document.createElement('option');
+    o.value=k; o.textContent=`${k}: ${label}`; if(k==='F')o.selected=true;
+    sel.appendChild(o);
+  }
+  updateTip();
+}
+function updateTip(){
+  const k=$$('p-scheme').value;
+  $$('scheme-tip').textContent=TIPS[k]||'';
+}
+$$('p-scheme').addEventListener('change',updateTip);
+
+// ── Init ──────────────────────────────────────────────────────────────
+window.addEventListener('load',async()=>{
+  await loadSchemes();
+  const s=await (await fetch('/api/status')).json();
+  if(s.data_loaded){
+    $$('sd-data').classList.add('ok');
+    $$('st-data').textContent=`${s.ticker} · ${s.rows} свечей`;
+    $$('upload-zone').classList.add('ok');
+  }
+  if(s.backtest_done){
+    $$('sd-bt').classList.add('ok');
+    $$('st-bt').textContent=`WR=${s.wr_pct}% · ${s.trades} сделок`;
+    $$('results-placeholder').style.display='none';
+  }
+});
+
+// ══════════════════════════════════════════════════════════════════════
+// Upload CSV
+// ══════════════════════════════════════════════════════════════════════
+$$('csv-file').addEventListener('change',async e=>{
+  const file=e.target.files[0]; if(!file)return;
+  const zone=$$('upload-zone');
+  zone.innerHTML='<input type="file" id="csv-file" accept=".csv"/><span class="spin"></span> Загрузка…';
+  rebind();
+  const fd=new FormData(); fd.append('file',file);
+  try{
+    const r=await fetch('/api/upload',{method:'POST',body:fd});
+    const d=await r.json(); if(!r.ok)throw new Error(d.detail);
+    zone.className='upload-zone ok';
+    zone.innerHTML=`<input type="file" id="csv-file" accept=".csv"/>✅ ${file.name}`;
+    rebind();
+    const info=$$('data-info'); info.style.display='block';
+    info.innerHTML=`<b>${d.ticker}</b> · <b>${d.rows.toLocaleString()}</b> свечей<br>${d.from.slice(0,10)} → ${d.to.slice(0,10)}`;
+    $$('sd-data').className='sdot ok'; $$('st-data').textContent=`${d.ticker} · ${d.rows} свечей`;
+    toast('Данные загружены','ok-t');
+    $$('dl-ticker').value=d.ticker;
+  }catch(err){
+    zone.className='upload-zone';
+    zone.innerHTML='<input type="file" id="csv-file" accept=".csv"/>📂 Выберите CSV-файл<div style="font-size:.68rem;color:var(--dim)">Финам / MOEX ISS · 1H</div>';
+    rebind(); toast(err.message,'err');
+  }
+});
+function rebind(){
+  const inp=$$('csv-file'); if(inp) inp.addEventListener('change',arguments.callee);
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// Download from MOEX
+// ══════════════════════════════════════════════════════════════════════
+$$('btn-download').addEventListener('click',async()=>{
+  const btn=$$('btn-download'); busy(btn,true);
+  const payload={ticker:$$('dl-ticker').value.toUpperCase(),days:+$$('dl-days').value,interval:'1H'};
+  try{
+    const r=await fetch('/api/download',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const d=await r.json(); if(!r.ok)throw new Error(d.detail);
+    const info=$$('dl-info'); info.style.display='block';
+    info.innerHTML=`✅ ${d.ticker}: <b>${d.rows.toLocaleString()}</b> свечей<br>${d.from.slice(0,10)} → ${d.to.slice(0,10)}<br>Сохранено: ${d.saved.split('\\').pop()}`;
+    $$('sd-data').className='sdot ok';
+    $$('st-data').textContent=`${d.ticker} · ${d.rows} свечей`;
+    $$('upload-zone').className='upload-zone ok';
+    $$('upload-zone').innerHTML=`<input type="file" id="csv-file" accept=".csv"/>✅ ${d.ticker} (MOEX)`;
+    rebind();
+    toast(`${d.ticker} загружен: ${d.rows} свечей`,'ok-t');
+  }catch(err){toast(err.message,'err')}
+  finally{busy(btn,false)}
+});
+
+// ══════════════════════════════════════════════════════════════════════
+// Backtest
+// ══════════════════════════════════════════════════════════════════════
+$$('btn-bt').addEventListener('click',async()=>{
+  const btn=$$('btn-bt'); busy(btn,true);
+  const t0=Date.now();
+  const payload={scheme:$$('p-scheme').value,max_hold:+$$('p-maxhold').value};
+  try{
+    const r=await fetch('/api/backtest',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const d=await r.json(); if(!r.ok)throw new Error(d.detail);
+    const sec=((Date.now()-t0)/1000).toFixed(1);
+    $$('sd-bt').className='sdot ok';
+    $$('st-bt').textContent=`WR=${d.wr_pct}% · ${d.trades} сделок · ${d.scheme.split(' ')[0]}`;
+    $$('st-perf').textContent=sec+'s';
+    $$('results-placeholder').style.display='none';
+    showMetrics(d);
+    showDist(d.exit_dist,d.trade_list);
+    showTrades(d.trade_list);
+    $$('btn-export').disabled=false;
+    toast(`Готово: WR=${d.wr_pct}%, PF=${d.pf}, Sharpe=${d.sharpe}`,'ok-t');
+    // switch to results tab
+    document.querySelector('.tab[data-tab="results"]').click();
+    await loadChart();
+  }catch(err){toast(err.message,'err')}
+  finally{busy(btn,false)}
+});
+
+// ══════════════════════════════════════════════════════════════════════
+// Compare schemes
+// ══════════════════════════════════════════════════════════════════════
+$$('btn-compare').addEventListener('click',async()=>{
+  const btn=$$('btn-compare'); busy(btn,true);
+  try{
+    const r=await fetch('/api/compare',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({max_hold:+$$('p-maxhold').value})});
+    const d=await r.json(); if(!r.ok)throw new Error(d.detail);
+    showCompare(d.schemes);
+    $$('results-placeholder').style.display='none';
+    document.querySelector('.tab[data-tab="results"]').click();
+    toast(`Сравнение завершено — лучший WR: ${d.schemes[0].wr_pct}% (схема ${d.schemes[0].key})`,'ok-t');
+  }catch(err){toast(err.message,'err')}
+  finally{busy(btn,false)}
+});
+
+// ══════════════════════════════════════════════════════════════════════
+// Chart
+// ══════════════════════════════════════════════════════════════════════
+$$('btn-chart').addEventListener('click',loadChart);
+async function loadChart(){
+  const btn=$$('btn-chart'); busy(btn,true);
+  try{
+    const candles=$$('p-candles').value;
+    const r=await fetch(`/api/chart?max_candles=${candles}`);
+    if(!r.ok){const e=await r.json();throw new Error(e.detail);}
+    const fig=await r.json();
+    Plotly.react('chart',fig.data,fig.layout,{responsive:true,displayModeBar:true,
+      modeBarButtonsToRemove:['lasso2d','select2d','autoScale2d']});
+  }catch(err){toast('График: '+err.message,'err')}
+  finally{busy(btn,false)}
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// Export
+// ══════════════════════════════════════════════════════════════════════
+$$('btn-export').addEventListener('click',()=>window.open('/api/export'));
+
+// ══════════════════════════════════════════════════════════════════════
+// Display helpers
+// ══════════════════════════════════════════════════════════════════════
+function showMetrics(d){
+  $$('card-metrics').style.display='block';
+  $$('metrics-title').textContent=`${d.ticker} · ${d.scheme.split('(')[0].trim()}`;
+  const items=[
+    {v:d.wr_pct+'%',   l:'Win Rate',   c:d.wr_pct>=65?'pos':d.wr_pct>=55?'warn':'neg'},
+    {v:d.pf,           l:'Profit Factor',c:d.pf>=1.3?'pos':d.pf>=1.0?'warn':'neg'},
+    {v:fmtPct(d.total_pct), l:'Доходность', c:colorCls(d.total_pct)},
+    {v:d.max_dd_pct+'%',l:'Max DD',    c:'neg'},
+    {v:d.sharpe,       l:'Sharpe',     c:d.sharpe>=2?'pos':d.sharpe>=0?'warn':'neg'},
+    {v:fmtPct(d.expectancy),l:'Expectancy',c:colorCls(d.expectancy)},
+    {v:d.trades,       l:'Сделок',     c:''},
+    {v:d.wins+'/'+d.losses,l:'W / L',  c:''},
+  ];
+  $$('metrics').innerHTML=items.map(i=>
+    `<div class="metric"><div class="v ${i.c}">${i.v}</div><div class="l">${i.l}</div></div>`
+  ).join('');
+}
+
+function showDist(dist,allTrades){
+  $$('card-dist').style.display='block';
+  const total=Object.values(dist).reduce((a,b)=>a+b,0);
+  const wrBy={};
+  for(const t of allTrades){
+    if(!wrBy[t.reason])wrBy[t.reason]={w:0,n:0};
+    wrBy[t.reason].n++;
+    if(t.win)wrBy[t.reason].w++;
+  }
+  const order=['TP4','TP3','TP2','TIME','END','SL'];
+  const sorted=Object.entries(dist).sort((a,b)=>order.indexOf(a[0])-order.indexOf(b[0]));
+  $$('dist').innerHTML=sorted.map(([r,n])=>{
+    const pct=(n/total*100).toFixed(0);
+    const wr=wrBy[r]?Math.round(wrBy[r].w/wrBy[r].n*100):0;
+    const cls=r.startsWith('TP')?'tp':r==='SL'?'sl':r==='TIME'?'time':'end';
+    return `<div class="dist-row">
+      <span class="dist-label">${r}</span>
+      <div class="dist-bar-wrap"><div class="dist-bar ${cls}" style="width:${pct}%"></div></div>
+      <span class="dist-n">${n}</span>
+      <span class="dist-wr">${wr}%</span>
+    </div>`;
+  }).join('');
+}
+
+function showTrades(trades){
+  $$('card-trades').style.display='block';
+  const shown=trades.slice(-50).reverse();
+  $$('trade-list').innerHTML=shown.map(t=>{
+    const tp=t.tps_hit>0?` TP:${t.tps_hit}`:'';
+    return `<div class="trade-row ${t.win?'win':'loss'}">
+      <span class="trade-num">#${t.idx}</span>
+      <div class="trade-meta">
+        <span class="trade-dt">${t.entry_dt} · ${t.hold}h</span>
+        <span class="trade-tag ${t.reason}">${t.reason}${tp}</span>
+      </div>
+      <span class="trade-pnl ${t.win?'pos':'neg'}">${fmtPct(t.pnl_pct)}</span>
+    </div>`;
+  }).join('');
+}
+
+function showCompare(rows){
+  $$('card-cmp').style.display='block';
+  const best=rows[0].key;
+  $$('cmp-table').innerHTML=`
+    <thead><tr>
+      <th>Схема</th><th>WR%</th><th>Total%</th><th>PF</th><th>Sharpe</th><th>MaxDD%</th>
+    </tr></thead>
+    <tbody>${rows.map(r=>`
+      <tr class="${r.key===best?'best':''}">
+        <td>${r.key}: ${r.label.split('@')[0].trim()}</td>
+        <td class="${r.wr_pct>=65?'td-pos':r.wr_pct>=55?'td-warn':'td-neg'}">${r.wr_pct}%</td>
+        <td class="${colorCls(r.total_pct)===''?'':colorCls(r.total_pct)==='pos'?'td-pos':'td-neg'}">${fmtPct(r.total_pct)}</td>
+        <td class="${r.pf>=1.3?'td-pos':r.pf>=1?'':'td-neg'}">${r.pf}</td>
+        <td class="${r.sharpe>=2?'td-pos':r.sharpe>=0?'':'td-neg'}">${r.sharpe}</td>
+        <td class="td-neg">${r.max_dd_pct}%</td>
+      </tr>`).join('')}
+    </tbody>`;
+}
+</script>
+</body>
+</html>

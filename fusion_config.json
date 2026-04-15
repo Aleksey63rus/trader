@@ -1,0 +1,12 @@
+{
+  "name": "FUSION",
+  "bar_mult": 1.8,
+  "atr_ratio": 0.95,
+  "rsi_lo": 52,
+  "rsi_hi": 80,
+  "adx_min": 22,
+  "vol_min": 1.5,
+  "max_hold": 20,
+  "scheme": "AGR",
+  "sl_atr_mult": 1.8
+}

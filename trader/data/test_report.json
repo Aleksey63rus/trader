@@ -1,0 +1,254 @@
+{
+  "timestamp": "2026-03-22T11:33:30.590514",
+  "total": 49,
+  "passed": 49,
+  "failed": 0,
+  "avg_ms": 156,
+  "tests": [
+    {
+      "name": "import core.indicators",
+      "status": "PASS",
+      "ms": 7
+    },
+    {
+      "name": "ema() — скользящая средняя",
+      "status": "PASS",
+      "ms": 9
+    },
+    {
+      "name": "atr() — средний истинный диапазон",
+      "status": "PASS",
+      "ms": 13
+    },
+    {
+      "name": "rsi() — индекс относительной силы",
+      "status": "PASS",
+      "ms": 12
+    },
+    {
+      "name": "adx() — индекс направленного движения",
+      "status": "PASS",
+      "ms": 28
+    },
+    {
+      "name": "bw_fractals() — фракталы Билла Вильямса",
+      "status": "PASS",
+      "ms": 10
+    },
+    {
+      "name": "zigzag() — ZigZag",
+      "status": "PASS",
+      "ms": 4
+    },
+    {
+      "name": "stochastic() — стохастик",
+      "status": "PASS",
+      "ms": 9
+    },
+    {
+      "name": "momentum() — моментум",
+      "status": "PASS",
+      "ms": 5
+    },
+    {
+      "name": "import + init_db()",
+      "status": "PASS",
+      "ms": 24
+    },
+    {
+      "name": "create / get portfolio",
+      "status": "PASS",
+      "ms": 43
+    },
+    {
+      "name": "get_portfolios() список",
+      "status": "PASS",
+      "ms": 4
+    },
+    {
+      "name": "add_trade + close_trade",
+      "status": "PASS",
+      "ms": 79
+    },
+    {
+      "name": "settings CRUD",
+      "status": "PASS",
+      "ms": 44
+    },
+    {
+      "name": "log_alert + get_pending_alerts",
+      "status": "PASS",
+      "ms": 88
+    },
+    {
+      "name": "save_backtest_result + get_backtest_result",
+      "status": "PASS",
+      "ms": 73
+    },
+    {
+      "name": "delete_portfolio (cleanup)",
+      "status": "PASS",
+      "ms": 42
+    },
+    {
+      "name": "import atr_bo_daily",
+      "status": "PASS",
+      "ms": 17
+    },
+    {
+      "name": "ATRBOConfig default + from_dict",
+      "status": "PASS",
+      "ms": 0
+    },
+    {
+      "name": "generate_signals() — сигналы на синтетических данных",
+      "status": "PASS",
+      "ms": 65
+    },
+    {
+      "name": "run_backtest() — бэктест 3 тикера",
+      "status": "PASS",
+      "ms": 774
+    },
+    {
+      "name": "import mtf_v1",
+      "status": "PASS",
+      "ms": 14
+    },
+    {
+      "name": "MTFv1Config default + from_dict",
+      "status": "PASS",
+      "ms": 0
+    },
+    {
+      "name": "run_backtest() MTF v1 — синтетические данные",
+      "status": "PASS",
+      "ms": 855
+    },
+    {
+      "name": "import mtf_v2",
+      "status": "PASS",
+      "ms": 13
+    },
+    {
+      "name": "MTFv2Config default + from_dict",
+      "status": "PASS",
+      "ms": 0
+    },
+    {
+      "name": "run_backtest() MTF v2 — синтетические данные",
+      "status": "PASS",
+      "ms": 1463
+    },
+    {
+      "name": "import data_loader",
+      "status": "PASS",
+      "ms": 1048
+    },
+    {
+      "name": "resample_tf() — 1H → D",
+      "status": "PASS",
+      "ms": 36
+    },
+    {
+      "name": "resample_tf() — 1H → 4H",
+      "status": "PASS",
+      "ms": 34
+    },
+    {
+      "name": "import FastAPI app",
+      "status": "PASS",
+      "ms": 2024
+    },
+    {
+      "name": "GET /api/health через TestClient",
+      "status": "PASS",
+      "ms": 373
+    },
+    {
+      "name": "GET /api/strategies список",
+      "status": "PASS",
+      "ms": 16
+    },
+    {
+      "name": "GET /api/strategies/atr_bo_daily",
+      "status": "PASS",
+      "ms": 12
+    },
+    {
+      "name": "GET /api/strategies/atr_bo_daily/default-config",
+      "status": "PASS",
+      "ms": 12
+    },
+    {
+      "name": "POST /api/portfolios — создание",
+      "status": "PASS",
+      "ms": 59
+    },
+    {
+      "name": "GET /api/portfolios — список",
+      "status": "PASS",
+      "ms": 18
+    },
+    {
+      "name": "POST /api/settings — обновление",
+      "status": "PASS",
+      "ms": 64
+    },
+    {
+      "name": "GET /api/settings",
+      "status": "PASS",
+      "ms": 48
+    },
+    {
+      "name": "POST /api/backtest/atr_bo_daily — мини-бэктест",
+      "status": "PASS",
+      "ms": 17
+    },
+    {
+      "name": "DELETE /api/portfolios/{pid} — удаление",
+      "status": "PASS",
+      "ms": 20
+    },
+    {
+      "name": "import max_bot",
+      "status": "PASS",
+      "ms": 0
+    },
+    {
+      "name": "fmt_entry() — вход в позицию",
+      "status": "PASS",
+      "ms": 0
+    },
+    {
+      "name": "fmt_exit() — прибыльная сделка",
+      "status": "PASS",
+      "ms": 0
+    },
+    {
+      "name": "fmt_exit() — убыточная сделка",
+      "status": "PASS",
+      "ms": 0
+    },
+    {
+      "name": "fmt_drawdown_warning() — предупреждение",
+      "status": "PASS",
+      "ms": 0
+    },
+    {
+      "name": "fmt_circuit_breaker() — остановка",
+      "status": "PASS",
+      "ms": 0
+    },
+    {
+      "name": "fmt_error() — системная ошибка",
+      "status": "PASS",
+      "ms": 0
+    },
+    {
+      "name": "send_alert_sync() без токена — не падает",
+      "status": "PASS",
+      "ms": 188
+    }
+  ]
+}
